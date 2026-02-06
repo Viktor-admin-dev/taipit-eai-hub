@@ -70,7 +70,7 @@ export default function Home() {
                 className="card group"
               >
                 <div className="flex items-center gap-4 mb-4">
-                  <Avatar src={testimonial.photo} name={testimonial.name} size="md" />
+                  <Avatar src={testimonial.photo} name={testimonial.name} size="lg" />
                   <div>
                     <h3 className="font-semibold text-primary group-hover:text-accent transition-colors">
                       {testimonial.name}

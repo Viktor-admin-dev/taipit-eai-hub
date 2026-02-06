@@ -38,7 +38,7 @@ export default function TestimonialsPage() {
                   <div className="md:col-span-1">
                     <div className="card sticky top-24">
                       <div className="flex flex-col items-center text-center">
-                        <Avatar src={testimonial.photo} name={testimonial.name} size="lg" className="mb-4" />
+                        <Avatar src={testimonial.photo} name={testimonial.name} size="xl" className="mb-4" />
                         <h2 className="text-xl font-bold text-primary mb-1">
                           {testimonial.name}
                         </h2>

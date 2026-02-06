@@ -6,14 +6,15 @@ import { useState } from "react";
 interface AvatarProps {
   src: string;
   name: string;
-  size?: "sm" | "md" | "lg";
+  size?: "sm" | "md" | "lg" | "xl";
   className?: string;
 }
 
 const sizeClasses = {
-  sm: "w-12 h-12 text-lg",
-  md: "w-16 h-16 text-xl",
-  lg: "w-24 h-24 text-3xl",
+  sm: "w-14 h-14 text-lg",
+  md: "w-20 h-20 text-2xl",
+  lg: "w-32 h-32 text-4xl",
+  xl: "w-40 h-40 text-5xl",
 };
 
 export default function Avatar({ src, name, size = "md", className = "" }: AvatarProps) {
@@ -21,7 +22,8 @@ export default function Avatar({ src, name, size = "md", className = "" }: Avata
   const initials = name.split(" ").map(n => n[0]).join("");
 
   const sizeClass = sizeClasses[size];
-  const pixelSize = size === "sm" ? 48 : size === "md" ? 64 : 96;
+  const pixelSizes = { sm: 56, md: 80, lg: 128, xl: 160 };
+  const pixelSize = pixelSizes[size];
 
   if (imageError || !src) {
     return (
