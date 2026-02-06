@@ -40,9 +40,18 @@ export default function Home() {
               <div className="text-4xl md:text-5xl font-bold text-accent mb-2">~800</div>
               <div className="text-muted">приглашённых участников</div>
             </div>
-            <div className="text-center">
+            <div className="text-center relative group cursor-pointer">
               <div className="text-4xl md:text-5xl font-bold text-accent mb-2">45</div>
               <div className="text-muted">премий</div>
+              <div className="absolute left-1/2 -translate-x-1/2 top-full mt-2 bg-primary text-white text-sm rounded-lg px-4 py-3 opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-10 w-64 shadow-xl">
+                <div className="font-semibold mb-2">Призовой фонд:</div>
+                <ul className="space-y-1 text-left">
+                  <li>15 премий по 150 000 руб.</li>
+                  <li>15 премий по 100 000 руб.</li>
+                  <li>15 премий по 50 000 руб.</li>
+                </ul>
+                <div className="absolute -top-2 left-1/2 -translate-x-1/2 border-8 border-transparent border-b-primary"></div>
+              </div>
             </div>
             <div className="text-center">
               <div className="text-4xl md:text-5xl font-bold text-accent mb-2">4</div>

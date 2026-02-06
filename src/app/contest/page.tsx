@@ -201,20 +201,33 @@ export default function ContestPage() {
               <div className="space-y-6">
                 <div className="card bg-gradient-to-br from-yellow-50 to-orange-50 border-yellow-200">
                   <h3 className="font-semibold text-primary mb-3">Призы в каждом дивизионе</h3>
-                  <ul className="space-y-2">
+                  <ul className="space-y-3">
                     <li className="flex items-center gap-3">
-                      <span className="w-8 h-8 bg-yellow-400 rounded-full flex items-center justify-center text-white font-bold">1</span>
-                      <span>Денежная премия + годовая подписка Claude Team</span>
+                      <span className="w-10 h-10 bg-yellow-400 rounded-full flex items-center justify-center text-white font-bold">1</span>
+                      <div>
+                        <div className="font-semibold text-yellow-700">150 000 руб.</div>
+                        <div className="text-sm text-muted">+ годовая подписка Claude Team</div>
+                      </div>
                     </li>
                     <li className="flex items-center gap-3">
-                      <span className="w-8 h-8 bg-gray-400 rounded-full flex items-center justify-center text-white font-bold">2</span>
-                      <span>Денежная премия + полугодовая подписка Claude Pro</span>
+                      <span className="w-10 h-10 bg-gray-400 rounded-full flex items-center justify-center text-white font-bold">2</span>
+                      <div>
+                        <div className="font-semibold text-gray-600">100 000 руб.</div>
+                        <div className="text-sm text-muted">+ полугодовая подписка Claude Pro</div>
+                      </div>
                     </li>
                     <li className="flex items-center gap-3">
-                      <span className="w-8 h-8 bg-orange-400 rounded-full flex items-center justify-center text-white font-bold">3</span>
-                      <span>Денежная премия + квартальная подписка Claude Pro</span>
+                      <span className="w-10 h-10 bg-orange-400 rounded-full flex items-center justify-center text-white font-bold">3</span>
+                      <div>
+                        <div className="font-semibold text-orange-600">50 000 руб.</div>
+                        <div className="text-sm text-muted">+ квартальная подписка Claude Pro</div>
+                      </div>
                     </li>
                   </ul>
+                  <div className="mt-4 pt-4 border-t border-yellow-200 text-center">
+                    <div className="text-2xl font-bold text-primary">4 500 000 руб.</div>
+                    <div className="text-sm text-muted">Общий призовой фонд</div>
+                  </div>
                 </div>
 
                 <div className="card">
