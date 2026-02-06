@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { testimonials } from "@/data/testimonials";
+import Avatar from "@/components/Avatar";
 
 export default function Home() {
   return (
@@ -69,9 +70,7 @@ export default function Home() {
                 className="card group"
               >
                 <div className="flex items-center gap-4 mb-4">
-                  <div className="w-16 h-16 bg-gradient-to-br from-accent to-primary rounded-full flex items-center justify-center text-white font-bold text-xl">
-                    {testimonial.name.split(" ").map(n => n[0]).join("")}
-                  </div>
+                  <Avatar src={testimonial.photo} name={testimonial.name} size="md" />
                   <div>
                     <h3 className="font-semibold text-primary group-hover:text-accent transition-colors">
                       {testimonial.name}

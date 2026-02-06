@@ -1,5 +1,6 @@
 import { testimonials } from "@/data/testimonials";
 import Link from "next/link";
+import Avatar from "@/components/Avatar";
 
 export const metadata = {
   title: "Истории успеха — EAI Hub Тайпит",
@@ -37,9 +38,7 @@ export default function TestimonialsPage() {
                   <div className="md:col-span-1">
                     <div className="card sticky top-24">
                       <div className="flex flex-col items-center text-center">
-                        <div className="w-24 h-24 bg-gradient-to-br from-accent to-primary rounded-full flex items-center justify-center text-white font-bold text-3xl mb-4">
-                          {testimonial.name.split(" ").map(n => n[0]).join("")}
-                        </div>
+                        <Avatar src={testimonial.photo} name={testimonial.name} size="lg" className="mb-4" />
                         <h2 className="text-xl font-bold text-primary mb-1">
                           {testimonial.name}
                         </h2>
