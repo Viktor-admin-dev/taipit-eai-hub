@@ -10,19 +10,20 @@ export default function Header() {
     { href: "/", label: "Главная" },
     { href: "/testimonials", label: "Истории успеха" },
     { href: "/contest", label: "Конкурс" },
+    { href: "/voting", label: "Голосование" },
   ];
 
   return (
-    <header className="bg-primary text-white sticky top-0 z-50 shadow-lg">
+    <header className="sticky top-0 z-50" style={{ background: 'rgba(6, 11, 24, 0.95)', backdropFilter: 'blur(12px)', borderBottom: '1px solid rgba(99, 130, 255, 0.1)' }}>
       <nav className="container mx-auto px-4 py-4">
         <div className="flex items-center justify-between">
           <Link href="/" className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-accent rounded-lg flex items-center justify-center font-bold text-xl">
+            <div className="w-10 h-10 rounded-lg flex items-center justify-center font-bold text-lg text-white" style={{ background: 'linear-gradient(135deg, #4a65f0, #6382ff)' }}>
               EAI
             </div>
             <div>
-              <div className="font-bold text-lg">EAI Hub</div>
-              <div className="text-xs text-blue-200">Тайпит</div>
+              <div className="font-bold text-lg text-white">EAI Hub</div>
+              <div className="text-xs" style={{ color: '#8898b8' }}>Тайпит</div>
             </div>
           </Link>
 
@@ -32,19 +33,22 @@ export default function Header() {
               <Link
                 key={link.href}
                 href={link.href}
-                className="hover:text-accent-light transition-colors font-medium"
+                className="transition-colors font-medium"
+                style={{ color: '#8898b8' }}
+                onMouseEnter={(e) => e.currentTarget.style.color = '#6382ff'}
+                onMouseLeave={(e) => e.currentTarget.style.color = '#8898b8'}
               >
                 {link.label}
               </Link>
             ))}
-            <Link href="/contest#apply" className="btn-primary !py-2 !px-4">
+            <Link href="/contest#apply" className="btn-primary !py-2 !px-5 text-sm">
               Подать заявку
             </Link>
           </div>
 
           {/* Mobile Menu Button */}
           <button
-            className="md:hidden p-2"
+            className="md:hidden p-2 text-white"
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
             aria-label="Меню"
           >
@@ -75,13 +79,14 @@ export default function Header() {
 
         {/* Mobile Navigation */}
         {mobileMenuOpen && (
-          <div className="md:hidden mt-4 pb-4 border-t border-primary-light pt-4">
+          <div className="md:hidden mt-4 pb-4 pt-4" style={{ borderTop: '1px solid rgba(99, 130, 255, 0.15)' }}>
             <div className="flex flex-col gap-4">
               {navLinks.map((link) => (
                 <Link
                   key={link.href}
                   href={link.href}
-                  className="hover:text-accent-light transition-colors font-medium"
+                  className="transition-colors font-medium"
+                  style={{ color: '#8898b8' }}
                   onClick={() => setMobileMenuOpen(false)}
                 >
                   {link.label}

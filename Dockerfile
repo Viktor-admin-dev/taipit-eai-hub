@@ -9,6 +9,8 @@ FROM base AS builder
 WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
+# Generate Prisma client and build
+RUN npx prisma generate
 RUN npm run build
 
 FROM base AS runner
@@ -16,9 +18,24 @@ WORKDIR /app
 ENV NODE_ENV=production
 RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nextjs
+
+# Copy public assets
 COPY --from=builder /app/public ./public
+
+# Copy standalone build
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
+
+# Copy Prisma
+COPY --from=builder /app/prisma ./prisma
+COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
+COPY --from=builder /app/node_modules/@prisma ./node_modules/@prisma
+
+# Set environment variables
+ENV DATABASE_URL="file:./prisma/dev.db"
+ENV ADMIN_PASSWORD="eai-hub-admin-2026"
+ENV JWT_SECRET="taipit-eai-hub-secret-key-2026"
+
 USER nextjs
 EXPOSE 3000
 ENV PORT=3000

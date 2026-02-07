@@ -1,0 +1,160 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Division {
+  id           Int           @id @default(autoincrement())
+  name         String
+  head         String?
+  applications Application[]
+  users        User[]
+}
+
+model User {
+  id           Int           @id @default(autoincrement())
+  email        String        @unique
+  name         String
+  position     String?
+  divisionId   Int?
+  division     Division?     @relation(fields: [divisionId], references: [id])
+  role         String        @default("employee") // employee | leader | moderator | admin
+  createdAt    DateTime      @default(now())
+  applications Application[]
+  forumTopics  ForumTopic[]
+  forumReplies ForumReply[]
+  votes        Vote[]
+}
+
+model Testimonial {
+  id              Int      @id @default(autoincrement())
+  name            String
+  position        String
+  roleDescription String?
+  divisionName    String?
+  photoUrl        String?
+  summary         String?
+  text            String
+  tools           String?  // JSON array
+  results         String?  // JSON array
+  isPublished     Boolean  @default(true)
+  createdAt       DateTime @default(now())
+}
+
+model Application {
+  id                  Int            @id @default(autoincrement())
+  applicantName       String
+  applicantEmail      String
+  divisionId          Int
+  division            Division       @relation(fields: [divisionId], references: [id])
+  userId              Int?
+  user                User?          @relation(fields: [userId], references: [id])
+  title               String
+  category            String         // efficiency | new_process | new_product | new_feature | analytics | content
+  type                String         // idea | prototype | implementation
+  format              String         // individual | team
+  descriptionProblem  String
+  descriptionSolution String
+  expectedEffect      String
+  resourcesNeeded     String?        // JSON array
+  filesUrls           String?        // JSON array
+  status              String         @default("submitted") // submitted | reviewing | finalist | winner | rejected
+  scoreBusiness       Int?
+  scoreInnovation     Int?
+  scoreFeasibility    Int?
+  scoreScalability    Int?
+  scoreQuality        Int?
+  expertComments      String?
+  votesTotal          Int            @default(0)
+  commissionScore     Int?
+  finalScore          Float?
+  placement           Int?           // 1, 2, 3 within division
+  createdAt           DateTime       @default(now())
+  updatedAt           DateTime       @updatedAt
+  teamMembers         TeamMember[]
+  votes               Vote[]
+  statusHistory       StatusChange[]
+}
+
+model StatusChange {
+  id            Int         @id @default(autoincrement())
+  applicationId Int
+  application   Application @relation(fields: [applicationId], references: [id])
+  fromStatus    String
+  toStatus      String
+  comment       String?
+  createdAt     DateTime    @default(now())
+}
+
+model TeamMember {
+  id            Int         @id @default(autoincrement())
+  applicationId Int
+  application   Application @relation(fields: [applicationId], references: [id])
+  name          String
+  position      String?
+  divisionName  String?
+}
+
+model Vote {
+  id            Int         @id @default(autoincrement())
+  userId        Int
+  user          User        @relation(fields: [userId], references: [id])
+  applicationId Int
+  application   Application @relation(fields: [applicationId], references: [id])
+  points        Int         // 3 for employee, 10-15 for leader
+  createdAt     DateTime    @default(now())
+
+  @@unique([userId, applicationId])
+}
+
+model ForumTopic {
+  id        Int          @id @default(autoincrement())
+  userId    Int
+  user      User         @relation(fields: [userId], references: [id])
+  title     String
+  body      String
+  category  String?      // ai-tools | business | technical | contest
+  isPinned  Boolean      @default(false)
+  createdAt DateTime     @default(now())
+  replies   ForumReply[]
+}
+
+model ForumReply {
+  id               Int        @id @default(autoincrement())
+  topicId          Int
+  topic            ForumTopic @relation(fields: [topicId], references: [id])
+  userId           Int
+  user             User       @relation(fields: [userId], references: [id])
+  body             String
+  isModeratorReply Boolean    @default(false)
+  createdAt        DateTime   @default(now())
+}
+
+model PageVisit {
+  id          Int      @id @default(autoincrement())
+  visitorHash String
+  pagePath    String
+  userAgent   String?
+  ipHash      String?
+  createdAt   DateTime @default(now())
+}
+
+model DailyStat {
+  id             Int      @id @default(autoincrement())
+  date           DateTime
+  uniqueVisitors Int
+  totalVisits    Int
+  pagePath       String?
+
+  @@unique([date, pagePath])
+}
+
+model SiteConfig {
+  id    Int    @id @default(autoincrement())
+  key   String @unique
+  value String
+}
