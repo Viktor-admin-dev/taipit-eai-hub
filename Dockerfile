@@ -34,7 +34,7 @@ COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
 COPY --from=builder /app/node_modules/@prisma ./node_modules/@prisma
 
 # Set environment variables
-ENV DATABASE_URL="file:./prisma/dev.db"
+ENV DATABASE_URL="file:/app/prisma/dev.db"
 ENV ADMIN_PASSWORD="eai-hub-admin-2026"
 ENV JWT_SECRET="taipit-eai-hub-secret-key-2026"
 
