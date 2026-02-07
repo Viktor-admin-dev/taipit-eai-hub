@@ -124,8 +124,8 @@ export default function WhyPage() {
   return (
     <main className="min-h-screen">
       {/* Hero */}
-      <section className="hero-gradient py-16 md:py-24">
-        <div className="hero-glow absolute inset-0" />
+      <section className="hero-gradient py-16 md:py-24 relative overflow-hidden">
+        <div className="hero-glow absolute inset-0 pointer-events-none" />
         <div className="container mx-auto px-4 text-center relative z-10">
           <h1 className="text-3xl md:text-[46px] font-black mb-2 text-white">
             Зачем нам этот конкурс?
@@ -144,7 +144,7 @@ export default function WhyPage() {
       </section>
 
       {/* Tabs Section */}
-      <section className="py-12 md:py-20">
+      <section className="py-12 md:py-20 relative z-10">
         <div className="container mx-auto px-4">
           {/* Tab Buttons */}
           <div className="flex flex-col md:flex-row gap-4 justify-center mb-10">
@@ -152,8 +152,8 @@ export default function WhyPage() {
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`flex items-center gap-3 px-6 py-4 rounded-xl transition-all ${
-                  activeTab === tab.id ? "scale-105" : "hover:scale-102"
+                className={`flex items-center gap-3 px-6 py-4 rounded-xl transition-all cursor-pointer ${
+                  activeTab === tab.id ? "scale-105" : "hover:scale-[1.02]"
                 }`}
                 style={{
                   background:
@@ -178,13 +178,17 @@ export default function WhyPage() {
 
           {/* Tab Content */}
           <div className="max-w-4xl mx-auto">
-            <div className="grid gap-6">
+            <div
+              key={activeTab}
+              className="grid gap-6 animate-fadeIn"
+            >
               {activeTabData.items.map((item, index) => (
                 <div
                   key={index}
                   className="card p-6 transition-all"
                   style={{
                     borderLeft: `4px solid ${activeTabData.color}`,
+                    animationDelay: `${index * 100}ms`,
                   }}
                 >
                   <h3
