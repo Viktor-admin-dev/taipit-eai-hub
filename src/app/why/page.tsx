@@ -234,13 +234,13 @@ export default function WhyPage() {
             }}
           >
             <p className="text-xl md:text-2xl font-bold text-white mb-1">
-              «AI не заменяет людей.
+              «AI не делает работу за тебя.
             </p>
             <p className="text-xl md:text-2xl font-bold gradient-text mb-4">
-              AI заменяет тех, кто не использует AI.»
+              Он делает тебя сильнее.»
             </p>
             <p className="text-base" style={{ color: "#8898b8" }}>
-              Конкурс — это возможность оказаться на правильной стороне перемен.
+              Конкурс — это возможность попробовать новые инструменты при поддержке компании.
             </p>
           </div>
         </div>
