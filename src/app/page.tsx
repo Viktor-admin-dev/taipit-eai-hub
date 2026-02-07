@@ -2,42 +2,13 @@ import Link from "next/link";
 import { testimonials } from "@/data/testimonials";
 import Avatar from "@/components/Avatar";
 import StatsSection from "@/components/StatsSection";
+import HeroCarousel from "@/components/HeroCarousel";
 
 export default function Home() {
   return (
     <>
-      {/* Hero Section */}
-      <section className="hero-gradient relative overflow-hidden py-20 md:py-32">
-        <div className="hero-glow absolute inset-0" />
-        <div className="container mx-auto px-4 text-center relative z-10">
-          <h1 className="text-4xl md:text-5xl lg:text-6xl font-black mb-2 leading-tight text-white">
-            AI уже работает в Тайпит.
-          </h1>
-          <h2 className="text-4xl md:text-5xl lg:text-6xl font-black mb-6 gradient-text">
-            Присоединяйся.
-          </h2>
-          <p className="text-lg md:text-xl mb-6 max-w-3xl mx-auto" style={{ color: '#8898b8' }}>
-            Конкурс идей по внедрению Enterprise AI.
-            45 премий для сотрудников всех дивизионов.
-          </p>
-
-          {/* Anti-fear box */}
-          <div className="anti-fear-box max-w-xl mx-auto mb-8">
-            <p className="text-sm italic" style={{ color: '#607090' }}>
-              «Это не про замену людей. Это про то, как работать умнее.»
-            </p>
-          </div>
-
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link href="/contest#apply" className="btn-primary text-lg !px-8 !py-4">
-              Подать заявку на конкурс
-            </Link>
-            <Link href="/testimonials" className="btn-secondary text-lg !px-8 !py-4">
-              Истории успеха
-            </Link>
-          </div>
-        </div>
-      </section>
+      {/* Hero Carousel */}
+      <HeroCarousel />
 
       {/* Stats Section */}
       <StatsSection />

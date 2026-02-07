@@ -11,6 +11,7 @@ export default function Header() {
     { href: "/testimonials", label: "Истории успеха" },
     { href: "/contest", label: "Конкурс" },
     { href: "/voting", label: "Голосование" },
+    { href: "/forum", label: "Форум" },
   ];
 
   return (
