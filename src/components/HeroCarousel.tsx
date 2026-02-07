@@ -13,6 +13,9 @@ interface Slide {
   cta2: { text: string; href: string };
 }
 
+const SLIDE_DURATION = 10000; // 10 seconds (v4)
+const HINT_DURATION = 5000; // Show swipe hint for 5 seconds
+
 const slides: Slide[] = [
   {
     id: 1,
@@ -70,15 +73,20 @@ const slides: Slide[] = [
   },
 ];
 
-const SLIDE_DURATION = 7000; // 7 seconds
-
 export default function HeroCarousel() {
   const [currentSlide, setCurrentSlide] = useState(0);
   const [progress, setProgress] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
   const [isAnimating, setIsAnimating] = useState(false);
+  const [showSwipeHint, setShowSwipeHint] = useState(true);
   const touchStartX = useRef<number | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+
+  // Hide swipe hint after 5 seconds
+  useEffect(() => {
+    const timer = setTimeout(() => setShowSwipeHint(false), HINT_DURATION);
+    return () => clearTimeout(timer);
+  }, []);
 
   const goToSlide = useCallback(
     (index: number) => {
@@ -86,7 +94,7 @@ export default function HeroCarousel() {
       setIsAnimating(true);
       setCurrentSlide(index);
       setProgress(0);
-      setTimeout(() => setIsAnimating(false), 300);
+      setTimeout(() => setIsAnimating(false), 400); // 400ms crossfade
     },
     [isAnimating]
   );
@@ -160,10 +168,8 @@ export default function HeroCarousel() {
       <div className="container mx-auto px-4 text-center relative z-10">
         <div
           key={slide.id}
-          className={`transition-all duration-300 ${
-            isAnimating
-              ? "opacity-0 translate-y-5"
-              : "opacity-100 translate-y-0"
+          className={`transition-opacity duration-[400ms] ${
+            isAnimating ? "opacity-0" : "opacity-100"
           }`}
         >
           {/* Title */}
@@ -185,14 +191,57 @@ export default function HeroCarousel() {
           </p>
 
           {/* Anti-fear box */}
-          <div className="anti-fear-box max-w-xl mx-auto mb-6">
+          <div className="anti-fear-box max-w-xl mx-auto mb-4">
             <p className="text-sm italic" style={{ color: "#607090" }}>
               «{slide.antiFear}»
             </p>
           </div>
 
+          {/* Slide Counter + Dots + Progress (INSIDE visible area on mobile) */}
+          <div className="flex flex-col items-center mb-4">
+            {/* Slide counter */}
+            <span className="text-xs mb-2" style={{ color: "#5a6a8a" }}>
+              {currentSlide + 1} / {slides.length}
+            </span>
+
+            {/* Dots - larger on mobile */}
+            <div className="flex gap-3 md:gap-2 mb-2">
+              {slides.map((_, index) => (
+                <button
+                  key={index}
+                  onClick={() => goToSlide(index)}
+                  className={`rounded-full transition-all ${
+                    index === currentSlide
+                      ? "w-[14px] h-[14px] md:w-[10px] md:h-[10px] bg-[#6382ff]"
+                      : "w-[10px] h-[10px] md:w-[8px] md:h-[8px] border border-[rgba(99,130,255,0.3)] bg-transparent hover:bg-[#6382ff]/30"
+                  }`}
+                  style={
+                    index === currentSlide
+                      ? { boxShadow: "0 0 10px rgba(99, 130, 255, 0.5)" }
+                      : {}
+                  }
+                  aria-label={`Перейти к слайду ${index + 1}`}
+                />
+              ))}
+            </div>
+
+            {/* Progress Bar */}
+            <div
+              className="w-32 h-1 rounded-full overflow-hidden"
+              style={{ background: "rgba(99, 130, 255, 0.2)" }}
+            >
+              <div
+                className="h-full rounded-full transition-all duration-50"
+                style={{
+                  width: `${progress}%`,
+                  background: "#6382ff",
+                }}
+              />
+            </div>
+          </div>
+
           {/* Contest deadline */}
-          <div className="flex items-center justify-center gap-3 mb-8">
+          <div className="flex items-center justify-center gap-3 mb-6">
             <span className="text-sm" style={{ color: "#8898b8" }}>
               Конкурс до 30 апреля 2026
             </span>
@@ -221,6 +270,15 @@ export default function HeroCarousel() {
           </div>
         </div>
       </div>
+
+      {/* Mobile swipe hint - pulsing arrow (first 5 seconds) */}
+      {showSwipeHint && (
+        <div className="absolute right-4 top-1/2 -translate-y-1/2 md:hidden animate-pulse">
+          <span className="text-3xl" style={{ color: "rgba(99, 130, 255, 0.6)" }}>
+            ›
+          </span>
+        </div>
+      )}
 
       {/* Navigation Arrows (visible on hover) */}
       <button
@@ -264,38 +322,6 @@ export default function HeroCarousel() {
         </svg>
       </button>
 
-      {/* Dots and Progress Bar */}
-      <div className="absolute bottom-8 left-1/2 -translate-x-1/2 z-20">
-        {/* Dots */}
-        <div className="flex gap-2 mb-2 justify-center">
-          {slides.map((_, index) => (
-            <button
-              key={index}
-              onClick={() => goToSlide(index)}
-              className={`w-3 h-3 rounded-full transition-all ${
-                index === currentSlide
-                  ? "bg-[#6382ff] scale-110"
-                  : "border border-[#6382ff] bg-transparent hover:bg-[#6382ff]/30"
-              }`}
-              aria-label={`Go to slide ${index + 1}`}
-            />
-          ))}
-        </div>
-
-        {/* Progress Bar */}
-        <div
-          className="w-32 h-1 rounded-full overflow-hidden mx-auto"
-          style={{ background: "rgba(99, 130, 255, 0.2)" }}
-        >
-          <div
-            className="h-full rounded-full transition-all duration-50"
-            style={{
-              width: `${progress}%`,
-              background: "#6382ff",
-            }}
-          />
-        </div>
-      </div>
     </section>
   );
 }
