@@ -3,7 +3,7 @@ import ApplicationForm from "@/components/ApplicationForm";
 
 export const metadata = {
   title: "Конкурс EAI Challenge — EAI Hub Тайпит",
-  description: "Участвуйте в конкурсе идей по внедрению AI в холдинге Тайпит. 45 премий, поддержка ресурсами, признание.",
+  description: "Участвуйте в конкурсе идей по внедрению AI в холдинге Тайпит. 60 премий, поддержка ресурсами, признание.",
 };
 
 const timeline = [
@@ -28,7 +28,7 @@ const timeline = [
   {
     period: "30 мая 2026",
     stage: "Питч + награждение",
-    description: "Финалисты презентуют, вручаем 45 премий",
+    description: "Финалисты презентуют, вручаем 60 премий",
     status: "future",
   },
 ];
@@ -51,7 +51,7 @@ export default function ContestPage() {
           </h1>
           <p className="text-xl max-w-2xl mx-auto" style={{ color: "#8898b8" }}>
             Конкурс идей по внедрению Enterprise AI в холдинге Тайпит.
-            45 премий для сотрудников всех дивизионов.
+            60 премий для сотрудников всех дивизионов.
           </p>
         </div>
       </section>
@@ -103,7 +103,7 @@ export default function ContestPage() {
         <div className="container mx-auto px-4">
           <h2 className="section-title text-center mb-4">Призовой фонд</h2>
           <p className="section-subtitle text-center mx-auto mb-12">
-            По 3 победителя в каждом из 15 дивизионов — всего 45 премий
+            По 3 победителя в каждом из 20 дивизионов — всего 60 премий
           </p>
           <div className="grid md:grid-cols-3 gap-6 max-w-3xl mx-auto">
             {prizes.map((prize) => (

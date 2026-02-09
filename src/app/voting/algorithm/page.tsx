@@ -387,7 +387,7 @@ export default function VotingPage() {
                 <div className="timeline-step" style={{ color: "#4ade80" }}>
                   <div className="font-semibold text-white">Питч финалистов + награждение</div>
                   <p className="text-sm mt-1" style={{ color: "#8898b8" }}>
-                    Топ-3 каждого дивизиона презентуют решения. Комиссия может скорректировать места в пределах ±1 позиции. Вручение 45 премий.
+                    Топ-3 каждого дивизиона презентуют решения. Комиссия может скорректировать места в пределах ±1 позиции. Вручение 60 премий.
                   </p>
                 </div>
               </div>
