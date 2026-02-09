@@ -126,6 +126,12 @@ export const divisions = [
   { id: "div-12", name: "12 дивизион" },
   { id: "div-13", name: "13 дивизион" },
   { id: "div-14", name: "14 дивизион" },
+  { id: "div-15", name: "15 дивизион" },
+  { id: "div-16", name: "16 дивизион" },
+  { id: "div-17", name: "17 дивизион" },
+  { id: "div-18", name: "18 дивизион" },
+  { id: "div-19", name: "19 дивизион" },
+  { id: "div-20", name: "20 дивизион" },
   { id: "div-55", name: "55 дивизион (Treejar, ОАЭ)" },
 ];
 
