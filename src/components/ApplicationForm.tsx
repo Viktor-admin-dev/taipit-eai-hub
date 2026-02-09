@@ -486,7 +486,7 @@ export default function ApplicationForm() {
           {resources.map((resource) => (
             <label
               key={resource}
-              className="flex items-center gap-3 p-3 rounded-lg cursor-pointer transition-all"
+              className="flex items-start gap-3 p-3 rounded-lg cursor-pointer transition-all"
               style={{
                 background: formData.resourcesNeeded.includes(resource)
                   ? "rgba(99, 130, 255, 0.1)"
@@ -502,9 +502,9 @@ export default function ApplicationForm() {
                 type="checkbox"
                 checked={formData.resourcesNeeded.includes(resource)}
                 onChange={() => toggleResource(resource)}
-                className="w-4 h-4"
+                className="w-4 h-4 mt-0.5 flex-shrink-0"
               />
-              <span className="text-sm text-white">{resource}</span>
+              <span className="text-sm text-white leading-tight">{resource}</span>
             </label>
           ))}
         </div>

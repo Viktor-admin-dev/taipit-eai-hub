@@ -79,8 +79,19 @@ export default function HeroCarousel() {
   const [isPaused, setIsPaused] = useState(false);
   const [isAnimating, setIsAnimating] = useState(false);
   const [showSwipeHint, setShowSwipeHint] = useState(true);
+  const [daysRemaining, setDaysRemaining] = useState(0);
   const touchStartX = useRef<number | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+
+  // Calculate days remaining on client side only
+  useEffect(() => {
+    const contestEnd = new Date("2026-04-30T23:59:59");
+    const now = new Date();
+    const days = Math.ceil(
+      (contestEnd.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)
+    );
+    setDaysRemaining(days > 0 ? days : 0);
+  }, []);
 
   // Hide swipe hint after 5 seconds
   useEffect(() => {
@@ -143,13 +154,6 @@ export default function HeroCarousel() {
     }
     touchStartX.current = null;
   };
-
-  // Calculate days remaining
-  const contestEnd = new Date("2026-04-30T23:59:59");
-  const now = new Date();
-  const daysRemaining = Math.ceil(
-    (contestEnd.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)
-  );
 
   const slide = slides[currentSlide];
 

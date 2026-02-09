@@ -63,7 +63,7 @@ export default function Footer() {
         </div>
 
         <div style={{ borderTop: '1px solid rgba(99, 130, 255, 0.1)', color: '#5a6a8a' }} className="mt-8 pt-8 text-center text-sm">
-          <p>&copy; {new Date().getFullYear()} Холдинг Тайпит. Все права защищены.</p>
+          <p suppressHydrationWarning>&copy; {new Date().getFullYear()} Холдинг Тайпит. Все права защищены.</p>
           <p className="mt-1">Внутренний корпоративный ресурс</p>
         </div>
       </div>
