@@ -160,7 +160,7 @@ export default function HeroCarousel() {
   return (
     <section
       ref={containerRef}
-      className="hero-gradient relative overflow-hidden py-20 md:py-32 min-h-[600px] md:min-h-[700px]"
+      className="hero-gradient relative overflow-hidden py-12 sm:py-20 md:py-32 min-h-[520px] sm:min-h-[600px] md:min-h-[700px]"
       onMouseEnter={() => setIsPaused(true)}
       onMouseLeave={() => setIsPaused(false)}
       onTouchStart={handleTouchStart}
@@ -177,12 +177,12 @@ export default function HeroCarousel() {
           }`}
         >
           {/* Title */}
-          <h1 className="text-3xl md:text-[46px] font-black mb-2 leading-tight text-white">
+          <h1 className="text-2xl sm:text-3xl md:text-[46px] font-black mb-2 leading-tight text-white">
             {slide.title}
           </h1>
 
           {/* Accent */}
-          <h2 className="text-3xl md:text-[46px] font-black mb-6 gradient-text">
+          <h2 className="text-2xl sm:text-3xl md:text-[46px] font-black mb-6 gradient-text">
             {slide.accent}
           </h2>
 

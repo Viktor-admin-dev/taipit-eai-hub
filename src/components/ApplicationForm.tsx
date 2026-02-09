@@ -483,9 +483,10 @@ export default function ApplicationForm() {
           Выберите ресурсы, которые вам понадобятся для реализации
         </p>
         <div className="grid md:grid-cols-3 gap-3 mb-4">
-          {resources.map((resource) => (
+          {resources.map((resource, index) => (
             <label
               key={resource}
+              htmlFor={`resource-${index}`}
               className="flex items-start gap-3 p-3 rounded-lg cursor-pointer transition-all"
               style={{
                 background: formData.resourcesNeeded.includes(resource)
@@ -500,9 +501,11 @@ export default function ApplicationForm() {
             >
               <input
                 type="checkbox"
+                id={`resource-${index}`}
                 checked={formData.resourcesNeeded.includes(resource)}
                 onChange={() => toggleResource(resource)}
                 className="w-4 h-4 mt-0.5 flex-shrink-0"
+                aria-label={resource}
               />
               <span className="text-sm text-white leading-tight">{resource}</span>
             </label>
