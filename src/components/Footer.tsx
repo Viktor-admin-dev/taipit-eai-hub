@@ -40,6 +40,11 @@ export default function Footer() {
                 </Link>
               </li>
               <li>
+                <Link href="/how-to-participate" className="hover:text-white transition-colors">
+                  Как участвовать
+                </Link>
+              </li>
+              <li>
                 <Link href="/voting" className="hover:text-white transition-colors">
                   Модель голосования
                 </Link>

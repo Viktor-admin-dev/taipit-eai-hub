@@ -11,6 +11,7 @@ export default function Header() {
     { href: "/why", label: "Зачем" },
     { href: "/testimonials", label: "Истории успеха" },
     { href: "/contest", label: "Конкурс" },
+    { href: "/how-to-participate", label: "Как участвовать" },
     { href: "/voting", label: "Голосование" },
     { href: "/forum", label: "Форум" },
   ];

@@ -91,8 +91,8 @@ export default function Home() {
               },
               {
                 step: "3",
-                title: "Получи ресурсы",
-                description: "Claude Pro/Team, помощь разработчиков",
+                title: "Получи тьютора и ресурсы",
+                description: "Наставник + Claude Pro/Team + план реализации",
                 icon: "🛠️",
               },
               {
@@ -119,6 +119,19 @@ export default function Home() {
                 <p className="text-sm" style={{ color: '#8898b8' }}>{item.description}</p>
               </div>
             ))}
+          </div>
+
+          <div className="text-center mt-10">
+            <Link
+              href="/how-to-participate"
+              className="inline-flex items-center gap-2 transition-colors font-medium"
+              style={{ color: "#6382ff" }}
+            >
+              Подробнее о процессе
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+              </svg>
+            </Link>
           </div>
         </div>
       </section>
