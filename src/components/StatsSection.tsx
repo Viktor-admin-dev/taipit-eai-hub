@@ -45,7 +45,7 @@ export default function StatsSection() {
     { value: "20", label: "дивизионов", color: "#6382ff" },
     { value: "~800", label: "приглашённых участников", color: "#6382ff" },
     {
-      value: "60",
+      value: "30",
       label: "премий",
       color: "#6382ff",
       hasTooltip: true,
@@ -100,15 +100,15 @@ export default function StatsSection() {
                   <div className="font-semibold mb-3 text-white">Призовой фонд:</div>
                   <ul className="space-y-2 text-sm" style={{ color: '#8898b8' }}>
                     <li className="flex justify-between">
-                      <span>20 премий по</span>
+                      <span>5 премий по</span>
                       <span className="font-semibold" style={{ color: '#4ade80' }}>150 000 руб.</span>
                     </li>
                     <li className="flex justify-between">
-                      <span>20 премий по</span>
+                      <span>10 премий по</span>
                       <span className="font-semibold" style={{ color: '#60a5fa' }}>100 000 руб.</span>
                     </li>
                     <li className="flex justify-between">
-                      <span>20 премий по</span>
+                      <span>15 премий по</span>
                       <span className="font-semibold" style={{ color: '#a78bfa' }}>50 000 руб.</span>
                     </li>
                   </ul>
