@@ -8,7 +8,7 @@ export const metadata = {
 
 const timeline = [
   {
-    period: "Старт — 30 апреля 2026",
+    period: "Финиш — 30 апреля 2026",
     stage: "Приём заявок",
     description: "Подавайте идеи, прототипы или внедрённые решения",
     status: "active",
