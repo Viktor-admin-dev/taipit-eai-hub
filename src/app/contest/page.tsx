@@ -26,7 +26,7 @@ const timeline = [
     status: "future",
   },
   {
-    period: "30 мая 2026",
+    period: "29 мая 2026",
     stage: "Питч + награждение",
     description: "Финалисты презентуют, вручаем 30 премий",
     status: "future",
