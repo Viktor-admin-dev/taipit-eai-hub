@@ -1,7 +1,6 @@
 "use client";
 
-import { useState } from "react";
-import { divisions } from "@/data/testimonials";
+import { useState, useEffect } from "react";
 
 const categories = [
   {
@@ -64,6 +63,15 @@ const resources = [
 ];
 
 export default function ApplicationForm() {
+  const [dbDivisions, setDbDivisions] = useState<{ id: number; name: string }[]>([]);
+
+  useEffect(() => {
+    fetch("/api/divisions")
+      .then((r) => r.json())
+      .then((data) => setDbDivisions(data))
+      .catch(() => {});
+  }, []);
+
   const [formData, setFormData] = useState({
     applicantName: "",
     applicantEmail: "",
@@ -238,7 +246,7 @@ export default function ApplicationForm() {
               onChange={(e) => setFormData((prev) => ({ ...prev, divisionId: e.target.value }))}
             >
               <option value="">Выберите дивизион...</option>
-              {divisions.map((div) => (
+              {dbDivisions.map((div) => (
                 <option key={div.id} value={div.id}>
                   {div.name}
                 </option>

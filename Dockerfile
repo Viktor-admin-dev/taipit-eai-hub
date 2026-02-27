@@ -11,8 +11,9 @@ FROM base AS builder
 WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
-# Generate Prisma client and build
+# Generate Prisma client, seed database, and build
 RUN npx prisma generate
+RUN DATABASE_URL="file:/app/prisma/dev.db" npx prisma db seed
 RUN npm run build
 
 FROM base AS runner
