@@ -130,6 +130,11 @@ input:focus, select:focus, textarea:focus {
   box-shadow: 0 0 0 3px rgba(99, 130, 255, 0.1);
 }
 
+select option {
+  background: #141e3e;
+  color: #ffffff;
+}
+
 input::placeholder, textarea::placeholder {
   color: var(--text-muted);
 }
