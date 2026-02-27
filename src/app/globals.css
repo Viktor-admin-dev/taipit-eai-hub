@@ -118,14 +118,14 @@ body {
 }
 
 /* Form inputs */
-input, select, textarea {
+input:not([type="checkbox"]):not([type="radio"]):not([type="range"]), select, textarea {
   @apply rounded-lg px-4 py-3 w-full transition-all outline-none;
   background: rgba(99, 130, 255, 0.05);
   border: 1px solid rgba(99, 130, 255, 0.15);
   color: var(--text-primary);
 }
 
-input:focus, select:focus, textarea:focus {
+input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):focus, select:focus, textarea:focus {
   border-color: var(--accent);
   box-shadow: 0 0 0 3px rgba(99, 130, 255, 0.1);
 }
