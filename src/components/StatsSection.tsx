@@ -42,7 +42,7 @@ export default function StatsSection() {
   }, []);
 
   const statsData = [
-    { value: "20", label: "дивизионов", color: "#6382ff" },
+    { value: "19", label: "дивизионов", color: "#6382ff" },
     { value: "~800", label: "приглашённых участников", color: "#6382ff" },
     {
       value: "30",

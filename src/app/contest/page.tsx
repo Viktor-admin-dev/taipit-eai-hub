@@ -103,7 +103,7 @@ export default function ContestPage() {
         <div className="container mx-auto px-4">
           <h2 className="section-title text-center mb-4">Призовой фонд</h2>
           <p className="section-subtitle text-center mx-auto mb-12">
-            По 3 победителя в каждом из 20 дивизионов — всего 30 премий
+            По 3 победителя в каждом из 19 дивизионов — всего 30 премий
           </p>
           <div className="grid md:grid-cols-3 gap-6 max-w-3xl mx-auto">
             {prizes.map((prize) => (
