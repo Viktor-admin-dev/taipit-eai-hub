@@ -362,7 +362,7 @@ export default function VotingPage() {
               <h2 className="text-xl font-semibold text-white mb-6">Процесс определения победителей</h2>
               <div className="space-y-0">
                 <div className="timeline-step" style={{ color: "#60a5fa" }}>
-                  <div className="font-semibold text-white">Открытое голосование (неделя 7)</div>
+                  <div className="font-semibold text-white">Открытое голосование</div>
                   <p className="text-sm mt-1" style={{ color: "#8898b8" }}>
                     Все {calculations.totalPeople} человек голосуют на сайте. Сотрудник — {empPoints} балл(а), руководитель — {leaderPoints}. Каждый распределяет баллы между заявками своего дивизиона.
                   </p>
