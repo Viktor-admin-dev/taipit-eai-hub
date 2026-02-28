@@ -2,17 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-
-interface Topic {
-  id: number;
-  title: string;
-  author: string;
-  authorRole: "employee" | "moderator";
-  category: string;
-  repliesCount: number;
-  createdAt: string;
-  isPinned: boolean;
-}
+import { sampleTopics, categoryLabels } from "@/data/forum";
 
 const categories = [
   { id: "all", name: "Все темы", icon: "📋", color: "#6382ff" },
@@ -22,87 +12,6 @@ const categories = [
   { id: "contest", name: "Конкурс", icon: "🏆", color: "#a78bfa" },
 ];
 
-// Sample topics for MVP
-const sampleTopics: Topic[] = [
-  {
-    id: 1,
-    title: "Добро пожаловать на форум EAI Challenge!",
-    author: "Модератор",
-    authorRole: "moderator",
-    category: "contest",
-    repliesCount: 5,
-    createdAt: "2026-02-01",
-    isPinned: true,
-  },
-  {
-    id: 2,
-    title: "Как подготовить заявку: пошаговая инструкция",
-    author: "Модератор",
-    authorRole: "moderator",
-    category: "contest",
-    repliesCount: 12,
-    createdAt: "2026-02-03",
-    isPinned: true,
-  },
-  {
-    id: 3,
-    title: "Какие AI-инструменты доступны для участников?",
-    author: "Алексей К.",
-    authorRole: "employee",
-    category: "ai-tools",
-    repliesCount: 8,
-    createdAt: "2026-02-05",
-    isPinned: false,
-  },
-  {
-    id: 4,
-    title: "Claude Pro vs Claude Team — в чём разница?",
-    author: "Мария С.",
-    authorRole: "employee",
-    category: "ai-tools",
-    repliesCount: 15,
-    createdAt: "2026-02-06",
-    isPinned: false,
-  },
-  {
-    id: 5,
-    title: "Примеры успешных внедрений AI в логистике",
-    author: "Дмитрий В.",
-    authorRole: "employee",
-    category: "business",
-    repliesCount: 3,
-    createdAt: "2026-02-06",
-    isPinned: false,
-  },
-  {
-    id: 6,
-    title: "Как оценивается реализуемость идеи?",
-    author: "Елена П.",
-    authorRole: "employee",
-    category: "contest",
-    repliesCount: 7,
-    createdAt: "2026-02-07",
-    isPinned: false,
-  },
-  {
-    id: 7,
-    title: "Интеграция Claude с 1С — есть опыт?",
-    author: "Игорь М.",
-    authorRole: "employee",
-    category: "technical",
-    repliesCount: 4,
-    createdAt: "2026-02-07",
-    isPinned: false,
-  },
-];
-
-const categoryLabels: Record<string, { name: string; color: string }> = {
-  "ai-tools": { name: "AI-инструменты", color: "#60a5fa" },
-  "business": { name: "Бизнес-процессы", color: "#4ade80" },
-  "technical": { name: "Технические вопросы", color: "#f59e0b" },
-  "contest": { name: "Конкурс", color: "#a78bfa" },
-};
-
 export default function ForumPage() {
   const [activeCategory, setActiveCategory] = useState("all");
   const [showNewTopicModal, setShowNewTopicModal] = useState(false);
@@ -111,7 +20,6 @@ export default function ForumPage() {
     (topic) => activeCategory === "all" || topic.category === activeCategory
   );
 
-  // Sort: pinned first, then by date
   const sortedTopics = [...filteredTopics].sort((a, b) => {
     if (a.isPinned && !b.isPinned) return -1;
     if (!a.isPinned && b.isPinned) return 1;
@@ -164,82 +72,80 @@ export default function ForumPage() {
         {/* Topics List */}
         <div className="space-y-3">
           {sortedTopics.map((topic) => (
-            <div
-              key={topic.id}
-              className="card flex flex-col md:flex-row md:items-center gap-4 cursor-pointer hover:border-[#6382ff] transition-colors"
-              style={{
-                borderColor: topic.isPinned
-                  ? "rgba(99, 130, 255, 0.3)"
-                  : undefined,
-              }}
-            >
-              {/* Pinned indicator */}
-              {topic.isPinned && (
-                <div
-                  className="text-xs px-2 py-1 rounded-full flex items-center gap-1 w-fit"
-                  style={{ background: "rgba(99, 130, 255, 0.15)", color: "#6382ff" }}
-                >
-                  📌 Закреплено
-                </div>
-              )}
+            <Link key={topic.id} href={`/forum/${topic.id}`} className="block">
+              <div
+                className="card flex flex-col md:flex-row md:items-center gap-4 hover:border-[#6382ff] transition-colors"
+                style={{
+                  borderColor: topic.isPinned
+                    ? "rgba(99, 130, 255, 0.3)"
+                    : undefined,
+                }}
+              >
+                {/* Pinned indicator */}
+                {topic.isPinned && (
+                  <div
+                    className="text-xs px-2 py-1 rounded-full flex items-center gap-1 w-fit"
+                    style={{ background: "rgba(99, 130, 255, 0.15)", color: "#6382ff" }}
+                  >
+                    📌 Закреплено
+                  </div>
+                )}
 
-              {/* Main content */}
-              <div className="flex-1">
-                <div className="flex items-center gap-2 mb-1">
-                  <h3 className="font-semibold text-white">{topic.title}</h3>
+                {/* Main content */}
+                <div className="flex-1">
+                  <div className="flex items-center gap-2 mb-1">
+                    <h3 className="font-semibold text-white">{topic.title}</h3>
+                  </div>
+                  <div className="flex flex-wrap items-center gap-3 text-sm">
+                    <span
+                      className="flex items-center gap-1"
+                      style={{ color: "#8898b8" }}
+                    >
+                      {topic.authorRole === "moderator" ? (
+                        <span
+                          className="text-xs px-2 py-0.5 rounded-full"
+                          style={{ background: "#6382ff", color: "white" }}
+                        >
+                          Модератор
+                        </span>
+                      ) : (
+                        topic.author
+                      )}
+                    </span>
+                    <span
+                      className="text-xs px-2 py-0.5 rounded-full"
+                      style={{
+                        background: `${categoryLabels[topic.category]?.color}20`,
+                        color: categoryLabels[topic.category]?.color,
+                      }}
+                    >
+                      {categoryLabels[topic.category]?.name}
+                    </span>
+                    <span style={{ color: "#5a6a8a" }}>
+                      {new Date(topic.createdAt).toLocaleDateString("ru-RU")}
+                    </span>
+                  </div>
                 </div>
-                <div className="flex flex-wrap items-center gap-3 text-sm">
-                  {/* Author */}
-                  <span
-                    className="flex items-center gap-1"
-                    style={{ color: "#8898b8" }}
+
+                {/* Replies count */}
+                <div className="flex items-center gap-2" style={{ color: "#8898b8" }}>
+                  <svg
+                    className="w-5 h-5"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
                   >
-                    {topic.authorRole === "moderator" ? (
-                      <span
-                        className="text-xs px-2 py-0.5 rounded-full"
-                        style={{ background: "#6382ff", color: "white" }}
-                      >
-                        Модератор
-                      </span>
-                    ) : (
-                      topic.author
-                    )}
-                  </span>
-                  {/* Category */}
-                  <span
-                    className="text-xs px-2 py-0.5 rounded-full"
-                    style={{
-                      background: `${categoryLabels[topic.category]?.color}20`,
-                      color: categoryLabels[topic.category]?.color,
-                    }}
-                  >
-                    {categoryLabels[topic.category]?.name}
-                  </span>
-                  {/* Date */}
-                  <span style={{ color: "#5a6a8a" }}>
-                    {new Date(topic.createdAt).toLocaleDateString("ru-RU")}
-                  </span>
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
+                    />
+                  </svg>
+                  <span>{topic.repliesCount}</span>
                 </div>
               </div>
-
-              {/* Replies count */}
-              <div className="flex items-center gap-2" style={{ color: "#8898b8" }}>
-                <svg
-                  className="w-5 h-5"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
-                  />
-                </svg>
-                <span>{topic.repliesCount}</span>
-              </div>
-            </div>
+            </Link>
           ))}
         </div>
 
