@@ -141,7 +141,7 @@ export default function WhyPage() {
             Зачем этот конкурс?
           </h1>
           <p className="text-lg" style={{ color: "#8898b8" }}>
-            Слово и дело государево и три причины участвовать
+            Слово акционера и три причины участвовать
           </p>
         </div>
       </section>
