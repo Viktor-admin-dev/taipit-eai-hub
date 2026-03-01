@@ -104,3 +104,26 @@ export async function PATCH(
     return NextResponse.json({ error: "Ошибка обновления" }, { status: 500 });
   }
 }
+
+export async function DELETE(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  if (!verifyAdminToken(request)) {
+    return NextResponse.json({ error: "Не авторизован" }, { status: 401 });
+  }
+
+  try {
+    const { id } = await params;
+    const topicId = Number(id);
+
+    // Delete all replies first, then the topic
+    await prisma.forumReply.deleteMany({ where: { topicId } });
+    await prisma.forumTopic.delete({ where: { id: topicId } });
+
+    return NextResponse.json({ success: true });
+  } catch (error) {
+    console.error("Admin topic delete error:", error);
+    return NextResponse.json({ error: "Ошибка удаления" }, { status: 500 });
+  }
+}

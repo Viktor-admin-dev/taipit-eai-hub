@@ -30,3 +30,21 @@ export async function PATCH(
     return NextResponse.json({ error: "Ошибка обновления" }, { status: 500 });
   }
 }
+
+export async function DELETE(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  if (!verifyAdminToken(request)) {
+    return NextResponse.json({ error: "Не авторизован" }, { status: 401 });
+  }
+
+  try {
+    const { id } = await params;
+    await prisma.forumReply.delete({ where: { id: Number(id) } });
+    return NextResponse.json({ success: true });
+  } catch (error) {
+    console.error("Admin reply delete error:", error);
+    return NextResponse.json({ error: "Ошибка удаления" }, { status: 500 });
+  }
+}

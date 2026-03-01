@@ -13,6 +13,7 @@ interface Topic {
   author: string;
   authorEmail: string;
   authorRole: string;
+  authorDivision: string | null;
   repliesCount: number;
 }
 
@@ -149,6 +150,21 @@ export default function AdminForumPage() {
     else fetchAllTopics();
   };
 
+  const handleDeleteTopic = async (topicId: number) => {
+    if (!confirm("Удалить тему и все ответы?")) return;
+    await fetch(`/api/admin/forum/topics/${topicId}`, { method: "DELETE" });
+    if (selectedTopic?.id === topicId) setSelectedTopic(null);
+    if (tab === "moderation") fetchModerationData();
+    else fetchAllTopics();
+  };
+
+  const handleDeleteReply = async (replyId: number) => {
+    if (!confirm("Удалить ответ?")) return;
+    await fetch(`/api/admin/forum/replies/${replyId}`, { method: "DELETE" });
+    if (tab === "moderation") fetchModerationData();
+    if (selectedTopic) openTopicDetail(selectedTopic.id);
+  };
+
   const openTopicDetail = async (topicId: number) => {
     try {
       const res = await fetch(`/api/admin/forum/topics/${topicId}`);
@@ -258,6 +274,9 @@ export default function AdminForumPage() {
                         <div className="flex flex-wrap items-center gap-2 text-xs mb-2" style={{ color: "#8898b8" }}>
                           <span>{topic.author}</span>
                           <span style={{ color: "#5a6a8a" }}>({topic.authorEmail})</span>
+                          {topic.authorDivision && (
+                            <span style={{ color: "#6382ff" }}>{topic.authorDivision}</span>
+                          )}
                           <span className="badge-pending px-1.5 py-0.5 rounded-full">
                             {categoryLabels[topic.category] || topic.category}
                           </span>
@@ -283,6 +302,14 @@ export default function AdminForumPage() {
                           style={{ background: "rgba(239, 68, 68, 0.15)", color: "#ef4444" }}
                         >
                           Отклонить
+                        </button>
+                        <button
+                          onClick={() => handleDeleteTopic(topic.id)}
+                          className="px-3 py-1.5 rounded-lg text-sm font-medium transition-colors"
+                          style={{ background: "rgba(239, 68, 68, 0.08)", color: "#ef4444" }}
+                          title="Удалить тему и все ответы"
+                        >
+                          🗑
                         </button>
                       </div>
                     </div>
@@ -342,6 +369,14 @@ export default function AdminForumPage() {
                           style={{ background: "rgba(239, 68, 68, 0.15)", color: "#ef4444" }}
                         >
                           Отклонить
+                        </button>
+                        <button
+                          onClick={() => handleDeleteReply(reply.id)}
+                          className="px-3 py-1.5 rounded-lg text-sm font-medium transition-colors"
+                          style={{ background: "rgba(239, 68, 68, 0.08)", color: "#ef4444" }}
+                          title="Удалить ответ"
+                        >
+                          🗑
                         </button>
                       </div>
                     </div>
@@ -403,6 +438,9 @@ export default function AdminForumPage() {
                       <td className="py-3 px-3">
                         <div className="text-sm text-white">{topic.author}</div>
                         <div className="text-xs" style={{ color: "#5a6a8a" }}>{topic.authorEmail}</div>
+                        {topic.authorDivision && (
+                          <div className="text-xs" style={{ color: "#6382ff" }}>{topic.authorDivision}</div>
+                        )}
                       </td>
                       <td className="py-3 px-3 text-sm text-white max-w-xs truncate">{topic.title}</td>
                       <td className="py-3 px-3 text-sm" style={{ color: "#8898b8" }}>
@@ -440,6 +478,14 @@ export default function AdminForumPage() {
                               ✓
                             </button>
                           )}
+                          <button
+                            onClick={() => handleDeleteTopic(topic.id)}
+                            className="text-sm px-2 py-1 rounded-lg transition-colors"
+                            style={{ background: "rgba(239, 68, 68, 0.08)", color: "#ef4444" }}
+                            title="Удалить"
+                          >
+                            🗑
+                          </button>
                         </div>
                       </td>
                     </tr>
@@ -524,6 +570,26 @@ export default function AdminForumPage() {
                 >
                   Отклонить
                 </button>
+                <button
+                  onClick={() => handleDeleteTopic(selectedTopic.id)}
+                  className="px-4 py-2 rounded-lg text-sm font-medium"
+                  style={{ background: "rgba(239, 68, 68, 0.08)", color: "#ef4444" }}
+                >
+                  Удалить тему
+                </button>
+              </div>
+            )}
+
+            {/* Delete button for non-pending topics */}
+            {selectedTopic.status !== "pending" && (
+              <div className="flex gap-2 mb-6">
+                <button
+                  onClick={() => handleDeleteTopic(selectedTopic.id)}
+                  className="px-4 py-2 rounded-lg text-sm font-medium"
+                  style={{ background: "rgba(239, 68, 68, 0.08)", color: "#ef4444" }}
+                >
+                  Удалить тему
+                </button>
               </div>
             )}
 
@@ -555,24 +621,34 @@ export default function AdminForumPage() {
                           {new Date(reply.createdAt).toLocaleString("ru-RU")}
                         </span>
                       </div>
-                      {reply.status === "pending" && !reply.isModeratorReply && (
-                        <div className="flex gap-1">
-                          <button
-                            onClick={() => handleReplyAction(reply.id, "published")}
-                            className="text-xs px-2 py-1 rounded-lg"
-                            style={{ background: "rgba(74, 222, 128, 0.15)", color: "#4ade80" }}
-                          >
-                            ✓
-                          </button>
-                          <button
-                            onClick={() => handleReplyAction(reply.id, "rejected")}
-                            className="text-xs px-2 py-1 rounded-lg"
-                            style={{ background: "rgba(239, 68, 68, 0.15)", color: "#ef4444" }}
-                          >
-                            ✕
-                          </button>
-                        </div>
-                      )}
+                      <div className="flex gap-1">
+                        {reply.status === "pending" && !reply.isModeratorReply && (
+                          <>
+                            <button
+                              onClick={() => handleReplyAction(reply.id, "published")}
+                              className="text-xs px-2 py-1 rounded-lg"
+                              style={{ background: "rgba(74, 222, 128, 0.15)", color: "#4ade80" }}
+                            >
+                              ✓
+                            </button>
+                            <button
+                              onClick={() => handleReplyAction(reply.id, "rejected")}
+                              className="text-xs px-2 py-1 rounded-lg"
+                              style={{ background: "rgba(239, 68, 68, 0.15)", color: "#ef4444" }}
+                            >
+                              ✕
+                            </button>
+                          </>
+                        )}
+                        <button
+                          onClick={() => handleDeleteReply(reply.id)}
+                          className="text-xs px-2 py-1 rounded-lg"
+                          style={{ background: "rgba(239, 68, 68, 0.08)", color: "#ef4444" }}
+                          title="Удалить"
+                        >
+                          🗑
+                        </button>
+                      </div>
                     </div>
                     <p className="text-sm whitespace-pre-wrap" style={{ color: "#c8d4e8" }}>{reply.body}</p>
                   </div>

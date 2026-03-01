@@ -20,7 +20,7 @@ export async function GET(request: NextRequest) {
       prisma.forumTopic.findMany({
         where,
         include: {
-          user: { select: { id: true, name: true, email: true, role: true } },
+          user: { select: { id: true, name: true, email: true, role: true, division: { select: { name: true } } } },
           _count: { select: { replies: true } },
         },
         orderBy: { createdAt: "desc" },
@@ -43,6 +43,7 @@ export async function GET(request: NextRequest) {
         author: t.user.name,
         authorEmail: t.user.email,
         authorRole: t.user.role,
+        authorDivision: t.user.division?.name || null,
         repliesCount: t._count.replies,
       })),
       total,
