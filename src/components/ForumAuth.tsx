@@ -120,7 +120,7 @@ export function ForumLoginForm({ onClose }: { onClose?: () => void }) {
         </div>
         <h2 className="text-xl font-bold text-white mb-1">Вход на форум</h2>
         <p className="text-sm" style={{ color: "#8898b8" }}>
-          Авторизуйтесь через корпоративный email
+          Авторизуйтесь для участия в форуме
         </p>
       </div>
 
@@ -140,13 +140,13 @@ export function ForumLoginForm({ onClose }: { onClose?: () => void }) {
 
         <div>
           <label className="block text-sm font-medium mb-1.5" style={{ color: "#8898b8" }}>
-            Корпоративный email
+            Email
           </label>
           <input
             type="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            placeholder="name@taipit.ru"
+            placeholder="name@company.ru"
             required
           />
         </div>

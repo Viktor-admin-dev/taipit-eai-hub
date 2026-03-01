@@ -151,7 +151,7 @@ export default function AdminForumPage() {
 
   const openTopicDetail = async (topicId: number) => {
     try {
-      const res = await fetch(`/api/forum/topics/${topicId}`);
+      const res = await fetch(`/api/admin/forum/topics/${topicId}`);
       if (res.ok) {
         const data = await res.json();
         setSelectedTopic(data.topic);

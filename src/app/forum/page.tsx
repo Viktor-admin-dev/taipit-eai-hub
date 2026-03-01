@@ -78,6 +78,9 @@ export default function ForumPage() {
         setNewBody("");
         setShowModal("success");
         fetchTopics();
+      } else if (res.status === 401) {
+        // Auth expired — show login form again
+        setShowModal("login");
       }
     } catch {
       // ignore
@@ -112,7 +115,7 @@ export default function ForumPage() {
               </span>
             )}
             <button onClick={handleNewTopicClick} className="btn-primary">
-              + Создать тему
+              + Задать вопрос
             </button>
           </div>
         </div>
@@ -258,7 +261,7 @@ export default function ForumPage() {
               className="card max-w-lg w-full"
               onClick={(e) => e.stopPropagation()}
             >
-              <h2 className="text-xl font-bold text-white mb-4">Создать тему</h2>
+              <h2 className="text-xl font-bold text-white mb-4">Задать вопрос</h2>
               <form onSubmit={handleCreateTopic} className="space-y-4">
                 <div>
                   <label className="block text-sm font-medium mb-1.5" style={{ color: "#8898b8" }}>
@@ -339,12 +342,12 @@ export default function ForumPage() {
                   <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                 </svg>
               </div>
-              <h2 className="text-xl font-bold text-white mb-2">Тема отправлена!</h2>
+              <h2 className="text-xl font-bold text-white mb-2">Вопрос отправлен!</h2>
               <p className="mb-1" style={{ color: "#8898b8" }}>
                 Ваш вопрос отправлен на модерацию.
               </p>
               <p className="text-sm mb-6" style={{ color: "#5a6a8a" }}>
-                Модератор проверит и опубликует тему, а затем ответит на ваш вопрос в течение 24 часов.
+                Модератор проверит и опубликует вопрос, а затем ответит в течение 24 часов.
               </p>
               <button
                 onClick={() => setShowModal(null)}

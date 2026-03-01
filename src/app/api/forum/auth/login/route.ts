@@ -15,9 +15,9 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    if (!email.endsWith("@taipit.ru")) {
+    if (!email.includes("@")) {
       return NextResponse.json(
-        { error: "Используйте корпоративный email @taipit.ru" },
+        { error: "Введите корректный email" },
         { status: 400 }
       );
     }
