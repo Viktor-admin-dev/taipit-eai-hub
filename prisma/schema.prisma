@@ -118,6 +118,7 @@ model ForumTopic {
   title     String
   body      String
   category  String?      // ai-tools | business | technical | contest
+  status    String       @default("pending") // pending | published | rejected
   isPinned  Boolean      @default(false)
   createdAt DateTime     @default(now())
   replies   ForumReply[]
@@ -130,6 +131,7 @@ model ForumReply {
   userId           Int
   user             User       @relation(fields: [userId], references: [id])
   body             String
+  status           String     @default("pending") // pending | published | rejected
   isModeratorReply Boolean    @default(false)
   createdAt        DateTime   @default(now())
 }
