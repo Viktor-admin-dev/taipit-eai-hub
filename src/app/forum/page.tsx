@@ -1,8 +1,22 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import Link from "next/link";
-import { sampleTopics, categoryLabels } from "@/data/forum";
+import { useForumUser, ForumLoginForm } from "@/components/ForumAuth";
+
+interface Topic {
+  id: number;
+  title: string;
+  body: string;
+  author: string;
+  authorRole: string;
+  userId: number;
+  category: string;
+  status: string;
+  repliesCount: number;
+  createdAt: string;
+  isPinned: boolean;
+}
 
 const categories = [
   { id: "all", name: "Все темы", icon: "📋", color: "#6382ff" },
@@ -12,19 +26,75 @@ const categories = [
   { id: "contest", name: "Конкурс", icon: "🏆", color: "#a78bfa" },
 ];
 
+const categoryLabels: Record<string, { name: string; color: string }> = {
+  "ai-tools": { name: "AI-инструменты", color: "#60a5fa" },
+  business: { name: "Бизнес-процессы", color: "#4ade80" },
+  technical: { name: "Технические вопросы", color: "#f59e0b" },
+  contest: { name: "Конкурс", color: "#a78bfa" },
+};
+
 export default function ForumPage() {
+  const { user, loading: authLoading } = useForumUser();
   const [activeCategory, setActiveCategory] = useState("all");
-  const [showNewTopicModal, setShowNewTopicModal] = useState(false);
+  const [topics, setTopics] = useState<Topic[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [showModal, setShowModal] = useState<"login" | "create" | null>(null);
+  const [successMsg, setSuccessMsg] = useState("");
 
-  const filteredTopics = sampleTopics.filter(
-    (topic) => activeCategory === "all" || topic.category === activeCategory
-  );
+  // New topic form
+  const [newTitle, setNewTitle] = useState("");
+  const [newBody, setNewBody] = useState("");
+  const [newCategory, setNewCategory] = useState("ai-tools");
+  const [creating, setCreating] = useState(false);
 
-  const sortedTopics = [...filteredTopics].sort((a, b) => {
-    if (a.isPinned && !b.isPinned) return -1;
-    if (!a.isPinned && b.isPinned) return 1;
-    return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
-  });
+  const fetchTopics = useCallback(() => {
+    setLoading(true);
+    const params = new URLSearchParams();
+    if (activeCategory !== "all") params.set("category", activeCategory);
+
+    fetch(`/api/forum/topics?${params}`)
+      .then((res) => res.json())
+      .then((data) => setTopics(data.topics || []))
+      .catch(console.error)
+      .finally(() => setLoading(false));
+  }, [activeCategory]);
+
+  useEffect(() => {
+    fetchTopics();
+  }, [fetchTopics]);
+
+  const handleCreateTopic = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setCreating(true);
+
+    try {
+      const res = await fetch("/api/forum/topics", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ title: newTitle, body: newBody, category: newCategory }),
+      });
+      if (res.ok) {
+        setShowModal(null);
+        setNewTitle("");
+        setNewBody("");
+        setSuccessMsg("Тема отправлена на модерацию");
+        setTimeout(() => setSuccessMsg(""), 5000);
+        fetchTopics();
+      }
+    } catch {
+      // ignore
+    } finally {
+      setCreating(false);
+    }
+  };
+
+  const handleNewTopicClick = () => {
+    if (user) {
+      setShowModal("create");
+    } else {
+      setShowModal("login");
+    }
+  };
 
   return (
     <div className="min-h-screen py-12">
@@ -37,13 +107,27 @@ export default function ForumPage() {
               Задавайте вопросы, делитесь опытом, обсуждайте идеи
             </p>
           </div>
-          <button
-            onClick={() => setShowNewTopicModal(true)}
-            className="btn-primary"
-          >
-            + Создать тему
-          </button>
+          <div className="flex items-center gap-3">
+            {!authLoading && user && (
+              <span className="text-sm" style={{ color: "#8898b8" }}>
+                {user.name}
+              </span>
+            )}
+            <button onClick={handleNewTopicClick} className="btn-primary">
+              + Создать тему
+            </button>
+          </div>
         </div>
+
+        {/* Success message */}
+        {successMsg && (
+          <div
+            className="mb-6 p-4 rounded-xl text-sm animate-fadeIn"
+            style={{ background: "rgba(74, 222, 128, 0.1)", color: "#4ade80", border: "1px solid rgba(74, 222, 128, 0.2)" }}
+          >
+            {successMsg}
+          </div>
+        )}
 
         {/* Categories */}
         <div className="flex flex-wrap gap-2 mb-8">
@@ -53,13 +137,8 @@ export default function ForumPage() {
               onClick={() => setActiveCategory(cat.id)}
               className="px-4 py-2 rounded-lg text-sm font-medium transition-all flex items-center gap-2"
               style={{
-                background:
-                  activeCategory === cat.id
-                    ? `${cat.color}20`
-                    : "rgba(99, 130, 255, 0.05)",
-                border: `1px solid ${
-                  activeCategory === cat.id ? cat.color : "rgba(99, 130, 255, 0.15)"
-                }`,
+                background: activeCategory === cat.id ? `${cat.color}20` : "rgba(99, 130, 255, 0.05)",
+                border: `1px solid ${activeCategory === cat.id ? cat.color : "rgba(99, 130, 255, 0.15)"}`,
                 color: activeCategory === cat.id ? cat.color : "#8898b8",
               }}
             >
@@ -70,15 +149,19 @@ export default function ForumPage() {
         </div>
 
         {/* Topics List */}
-        <div className="space-y-3">
-          {sortedTopics.map((topic) => (
-            <Link key={topic.id} href={`/forum/${topic.id}`} className="block">
-              <div
-                className="card flex flex-col md:flex-row md:items-center gap-4 hover:border-[#6382ff] transition-colors"
+        {loading ? (
+          <div className="flex items-center justify-center h-64">
+            <div className="animate-spin w-8 h-8 border-4 border-[#6382ff] border-t-transparent rounded-full" />
+          </div>
+        ) : (
+          <div className="space-y-3">
+            {topics.map((topic) => (
+              <Link
+                key={topic.id}
+                href={`/forum/${topic.id}`}
+                className="card flex flex-col md:flex-row md:items-center gap-4 cursor-pointer hover:border-[#6382ff] transition-colors block"
                 style={{
-                  borderColor: topic.isPinned
-                    ? "rgba(99, 130, 255, 0.3)"
-                    : undefined,
+                  borderColor: topic.isPinned ? "rgba(99, 130, 255, 0.3)" : undefined,
                 }}
               >
                 {/* Pinned indicator */}
@@ -91,16 +174,20 @@ export default function ForumPage() {
                   </div>
                 )}
 
+                {/* Pending badge for own topics */}
+                {topic.status === "pending" && (
+                  <div className="badge-pending text-xs px-2 py-1 rounded-full w-fit">
+                    На модерации
+                  </div>
+                )}
+
                 {/* Main content */}
                 <div className="flex-1">
                   <div className="flex items-center gap-2 mb-1">
                     <h3 className="font-semibold text-white">{topic.title}</h3>
                   </div>
                   <div className="flex flex-wrap items-center gap-3 text-sm">
-                    <span
-                      className="flex items-center gap-1"
-                      style={{ color: "#8898b8" }}
-                    >
+                    <span className="flex items-center gap-1" style={{ color: "#8898b8" }}>
                       {topic.authorRole === "moderator" ? (
                         <span
                           className="text-xs px-2 py-0.5 rounded-full"
@@ -112,15 +199,17 @@ export default function ForumPage() {
                         topic.author
                       )}
                     </span>
-                    <span
-                      className="text-xs px-2 py-0.5 rounded-full"
-                      style={{
-                        background: `${categoryLabels[topic.category]?.color}20`,
-                        color: categoryLabels[topic.category]?.color,
-                      }}
-                    >
-                      {categoryLabels[topic.category]?.name}
-                    </span>
+                    {topic.category && categoryLabels[topic.category] && (
+                      <span
+                        className="text-xs px-2 py-0.5 rounded-full"
+                        style={{
+                          background: `${categoryLabels[topic.category].color}20`,
+                          color: categoryLabels[topic.category].color,
+                        }}
+                      >
+                        {categoryLabels[topic.category].name}
+                      </span>
+                    )}
                     <span style={{ color: "#5a6a8a" }}>
                       {new Date(topic.createdAt).toLocaleDateString("ru-RU")}
                     </span>
@@ -129,12 +218,7 @@ export default function ForumPage() {
 
                 {/* Replies count */}
                 <div className="flex items-center gap-2" style={{ color: "#8898b8" }}>
-                  <svg
-                    className="w-5 h-5"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path
                       strokeLinecap="round"
                       strokeLinejoin="round"
@@ -144,44 +228,106 @@ export default function ForumPage() {
                   </svg>
                   <span>{topic.repliesCount}</span>
                 </div>
-              </div>
-            </Link>
-          ))}
-        </div>
+              </Link>
+            ))}
+          </div>
+        )}
 
-        {sortedTopics.length === 0 && (
+        {!loading && topics.length === 0 && (
           <div className="text-center py-12" style={{ color: "#5a6a8a" }}>
             Нет тем в этой категории
           </div>
         )}
 
-        {/* New Topic Modal */}
-        {showNewTopicModal && (
+        {/* Login Modal */}
+        {showModal === "login" && (
           <div
             className="fixed inset-0 z-50 flex items-center justify-center p-4"
             style={{ background: "rgba(0, 0, 0, 0.8)" }}
-            onClick={() => setShowNewTopicModal(false)}
+            onClick={() => setShowModal(null)}
+          >
+            <div className="card max-w-md w-full" onClick={(e) => e.stopPropagation()}>
+              <ForumLoginForm onClose={() => setShowModal("create")} />
+              <button
+                onClick={() => setShowModal(null)}
+                className="mt-4 text-sm w-full text-center"
+                style={{ color: "#5a6a8a" }}
+              >
+                Отмена
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Create Topic Modal */}
+        {showModal === "create" && (
+          <div
+            className="fixed inset-0 z-50 flex items-center justify-center p-4"
+            style={{ background: "rgba(0, 0, 0, 0.8)" }}
+            onClick={() => setShowModal(null)}
           >
             <div
               className="card max-w-lg w-full"
               onClick={(e) => e.stopPropagation()}
             >
               <h2 className="text-xl font-bold text-white mb-4">Создать тему</h2>
-              <p className="mb-6" style={{ color: "#8898b8" }}>
-                Для создания темы необходима авторизация через корпоративный email.
-                Эта функция будет доступна в следующем обновлении.
-              </p>
-              <div className="flex gap-3">
-                <button
-                  onClick={() => setShowNewTopicModal(false)}
-                  className="btn-secondary flex-1"
-                >
-                  Понятно
-                </button>
-                <Link href="/contest#apply" className="btn-primary flex-1 text-center">
-                  Подать заявку
-                </Link>
-              </div>
+              <form onSubmit={handleCreateTopic} className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium mb-1.5" style={{ color: "#8898b8" }}>
+                    Категория
+                  </label>
+                  <select
+                    value={newCategory}
+                    onChange={(e) => setNewCategory(e.target.value)}
+                  >
+                    {categories.filter((c) => c.id !== "all").map((cat) => (
+                      <option key={cat.id} value={cat.id}>
+                        {cat.icon} {cat.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1.5" style={{ color: "#8898b8" }}>
+                    Заголовок
+                  </label>
+                  <input
+                    type="text"
+                    value={newTitle}
+                    onChange={(e) => setNewTitle(e.target.value)}
+                    placeholder="О чём ваш вопрос?"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1.5" style={{ color: "#8898b8" }}>
+                    Текст
+                  </label>
+                  <textarea
+                    value={newBody}
+                    onChange={(e) => setNewBody(e.target.value)}
+                    placeholder="Опишите подробнее..."
+                    rows={5}
+                    required
+                  />
+                </div>
+                <div className="flex gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setShowModal(null)}
+                    className="btn-secondary flex-1"
+                  >
+                    Отмена
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={creating || !newTitle || !newBody}
+                    className="btn-primary flex-1 disabled:opacity-50"
+                  >
+                    {creating ? "Отправка..." : "Отправить"}
+                  </button>
+                </div>
+              </form>
             </div>
           </div>
         )}
