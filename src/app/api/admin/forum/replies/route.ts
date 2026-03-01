@@ -62,14 +62,22 @@ export async function POST(request: NextRequest) {
       });
     }
 
+    const numericTopicId = Number(topicId);
+
     const reply = await prisma.forumReply.create({
       data: {
-        topicId: Number(topicId),
+        topicId: numericTopicId,
         userId: moderator.id,
         body: body.trim(),
         status: "published",
         isModeratorReply: true,
       },
+    });
+
+    // Auto-approve the topic when moderator replies
+    await prisma.forumTopic.update({
+      where: { id: numericTopicId },
+      data: { status: "published" },
     });
 
     return NextResponse.json({ reply });
