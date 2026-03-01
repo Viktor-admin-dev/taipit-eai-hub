@@ -38,7 +38,7 @@ export default function ForumPage() {
   const [activeCategory, setActiveCategory] = useState("all");
   const [topics, setTopics] = useState<Topic[]>([]);
   const [loading, setLoading] = useState(true);
-  const [showModal, setShowModal] = useState<"login" | "create" | null>(null);
+  const [showModal, setShowModal] = useState<"login" | "create" | "success" | null>(null);
   const [successMsg, setSuccessMsg] = useState("");
 
   // New topic form
@@ -74,11 +74,9 @@ export default function ForumPage() {
         body: JSON.stringify({ title: newTitle, body: newBody, category: newCategory }),
       });
       if (res.ok) {
-        setShowModal(null);
         setNewTitle("");
         setNewBody("");
-        setSuccessMsg("Тема отправлена на модерацию");
-        setTimeout(() => setSuccessMsg(""), 5000);
+        setShowModal("success");
         fetchTopics();
       }
     } catch {
@@ -118,16 +116,6 @@ export default function ForumPage() {
             </button>
           </div>
         </div>
-
-        {/* Success message */}
-        {successMsg && (
-          <div
-            className="mb-6 p-4 rounded-xl text-sm animate-fadeIn"
-            style={{ background: "rgba(74, 222, 128, 0.1)", color: "#4ade80", border: "1px solid rgba(74, 222, 128, 0.2)" }}
-          >
-            {successMsg}
-          </div>
-        )}
 
         {/* Categories */}
         <div className="flex flex-wrap gap-2 mb-8">
@@ -328,6 +316,42 @@ export default function ForumPage() {
                   </button>
                 </div>
               </form>
+            </div>
+          </div>
+        )}
+
+        {/* Success Modal */}
+        {showModal === "success" && (
+          <div
+            className="fixed inset-0 z-50 flex items-center justify-center p-4"
+            style={{ background: "rgba(0, 0, 0, 0.8)" }}
+            onClick={() => setShowModal(null)}
+          >
+            <div
+              className="card max-w-md w-full text-center animate-fadeIn"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div
+                className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-5"
+                style={{ background: "rgba(74, 222, 128, 0.15)" }}
+              >
+                <svg className="w-8 h-8" fill="none" stroke="#4ade80" viewBox="0 0 24 24" strokeWidth={2.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                </svg>
+              </div>
+              <h2 className="text-xl font-bold text-white mb-2">Тема отправлена!</h2>
+              <p className="mb-1" style={{ color: "#8898b8" }}>
+                Ваш вопрос отправлен на модерацию.
+              </p>
+              <p className="text-sm mb-6" style={{ color: "#5a6a8a" }}>
+                Модератор проверит и опубликует тему, а затем ответит на ваш вопрос в течение 24 часов.
+              </p>
+              <button
+                onClick={() => setShowModal(null)}
+                className="btn-primary w-full"
+              >
+                Отлично
+              </button>
             </div>
           </div>
         )}
