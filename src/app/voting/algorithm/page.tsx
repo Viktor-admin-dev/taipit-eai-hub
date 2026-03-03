@@ -371,7 +371,7 @@ export default function VotingPage() {
                 <div className="timeline-step" style={{ color: "#f59e0b" }}>
                   <div className="font-semibold text-white">Формирование рейтинга</div>
                   <p className="text-sm mt-1" style={{ color: "#8898b8" }}>
-                    По каждому дивизиону формируется рейтинг заявок. Доля сотрудников: {calculations.empShare}%, руководителей: {calculations.leaderShare}%.
+                    По всем поданным заявкам формируется рейтинг. Доля сотрудников: {calculations.empShare}%, руководителей: {calculations.leaderShare}%.
                   </p>
                 </div>
 
