@@ -206,7 +206,7 @@ export default function ForumTopicPage({ params }: { params: Promise<{ id: strin
             <h2 className="text-lg font-semibold text-white">
               Ответы ({replies.filter((r) => r.status === "published").length})
             </h2>
-            {replies.map((reply) => (
+            {replies.filter((r) => r.status !== "rejected").map((reply) => (
               <div
                 key={reply.id}
                 className="card"
