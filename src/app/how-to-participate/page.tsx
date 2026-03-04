@@ -7,11 +7,11 @@ import { useState } from "react";
 const tutors = [
   {
     name: "Виктор Ярутов",
-    role: "Акционер, инициатор EAI Challenge",
+    role: "Учредитель, инициатор EAI Challenge",
   },
   {
     name: "Дмитрий Николаев",
-    role: "Акционер, тьютор",
+    role: "Учредитель, тьютор",
   },
 ];
 

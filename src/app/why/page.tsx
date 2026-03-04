@@ -141,7 +141,7 @@ export default function WhyPage() {
             Зачем этот конкурс?
           </h1>
           <p className="text-lg" style={{ color: "#8898b8" }}>
-            Слово акционера и три причины участвовать
+            Слово учредителя и три причины участвовать
           </p>
         </div>
       </section>
@@ -171,7 +171,7 @@ export default function WhyPage() {
               <div>
                 <p className="text-xl font-bold text-white">Виктор Ярутов</p>
                 <p className="text-sm" style={{ color: "#8898b8" }}>
-                  Акционер, Тайпит
+                  Учредитель
                 </p>
               </div>
             </div>
@@ -215,7 +215,7 @@ export default function WhyPage() {
             <div className="mt-8 pt-6" style={{ borderTop: "1px solid rgba(99,130,255,0.1)" }}>
               <p className="font-bold text-white">Виктор Ярутов</p>
               <p className="text-sm" style={{ color: "#5a6a8a" }}>
-                Акционер, Тайпит
+                Учредитель
               </p>
             </div>
           </div>
