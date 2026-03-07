@@ -107,6 +107,11 @@ export default function ApplicationDetailPage() {
   const [notifyingAuthor, setNotifyingAuthor] = useState(false);
   const [aiEvaluations, setAiEvaluations] = useState<AIEvaluation[]>([]);
   const [currentEvalIdx, setCurrentEvalIdx] = useState(0);
+  const [emailModal, setEmailModal] = useState<{
+    from: string; to: string; subject: string; html: string; resendConfigured: boolean;
+  } | null>(null);
+  const [emailSubject, setEmailSubject] = useState("");
+  const [sendingEmail, setSendingEmail] = useState(false);
 
   useEffect(() => {
     fetch(`/api/applications/${params.id}`)
@@ -180,22 +185,51 @@ export default function ApplicationDetailPage() {
     }
   };
 
-  const handleNotifyAuthor = async () => {
+  const handlePreviewAuthorEmail = async () => {
     setNotifyingAuthor(true);
+    try {
+      const eval_ = aiEvaluations[currentEvalIdx];
+      const qs = `applicationId=${params.id}${eval_ ? `&evaluationId=${eval_.id}` : ""}`;
+      const res = await fetch(`/api/admin/notify-author?${qs}`);
+      const data = await res.json();
+      if (res.ok) {
+        setEmailModal(data);
+        setEmailSubject(data.subject);
+      } else {
+        alert(data.error || "Ошибка загрузки превью");
+      }
+    } catch {
+      alert("Ошибка соединения");
+    } finally {
+      setNotifyingAuthor(false);
+    }
+  };
+
+  const handleSendAuthorEmail = async () => {
+    if (!emailModal) return;
+    setSendingEmail(true);
     try {
       const eval_ = aiEvaluations[currentEvalIdx];
       const res = await fetch("/api/admin/notify-author", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ applicationId: parseInt(params.id as string), evaluationId: eval_?.id }),
+        body: JSON.stringify({
+          applicationId: parseInt(params.id as string),
+          evaluationId: eval_?.id,
+          subject: emailSubject,
+        }),
       });
       const data = await res.json();
-      if (res.ok) alert("Фидбек отправлен автору!");
-      else alert(data.error || "Ошибка отправки");
+      if (res.ok) {
+        setEmailModal(null);
+        alert(data.sent ? "✅ Письмо отправлено!" : "⚠️ Письмо не отправлено (Resend не настроен). Логируется в EmailLog.");
+      } else {
+        alert(data.error || "Ошибка отправки");
+      }
     } catch {
       alert("Ошибка соединения");
     } finally {
-      setNotifyingAuthor(false);
+      setSendingEmail(false);
     }
   };
 
@@ -639,11 +673,11 @@ export default function ApplicationDetailPage() {
                       {notifyingCommission ? "Отправка..." : "📧 Комиссии"}
                     </button>
                     <button
-                      onClick={handleNotifyAuthor}
+                      onClick={handlePreviewAuthorEmail}
                       disabled={notifyingAuthor}
                       className="btn-secondary flex-1 text-sm !py-2 disabled:opacity-50"
                     >
-                      {notifyingAuthor ? "Отправка..." : "💬 Автору"}
+                      {notifyingAuthor ? "Загрузка..." : "💬 Автору"}
                     </button>
                   </div>
                 </>
@@ -653,5 +687,79 @@ export default function ApplicationDetailPage() {
         </div>
       </div>
     </div>
+
+    {/* Email preview modal */}
+    {emailModal && (
+      <div
+        className="fixed inset-0 z-50 flex items-start justify-center pt-10 pb-10 px-4 overflow-y-auto"
+        style={{ background: "rgba(0,0,0,0.7)" }}
+        onClick={(e) => { if (e.target === e.currentTarget) setEmailModal(null); }}
+      >
+        <div className="w-full max-w-2xl rounded-xl overflow-hidden" style={{ background: "#0d1526", border: "1px solid rgba(99,130,255,0.2)" }}>
+          {/* Modal header */}
+          <div className="flex items-center justify-between px-6 py-4" style={{ borderBottom: "1px solid rgba(99,130,255,0.15)" }}>
+            <h3 className="text-white font-semibold text-lg">📧 Письмо автору — предпросмотр</h3>
+            <button onClick={() => setEmailModal(null)} className="text-xl" style={{ color: "#8898b8" }}>✕</button>
+          </div>
+
+          <div className="p-6 space-y-4">
+            {/* From / To */}
+            <div className="rounded-lg p-4 space-y-2 text-sm" style={{ background: "rgba(99,130,255,0.07)" }}>
+              <div className="flex gap-3">
+                <span className="w-16 flex-shrink-0 font-medium" style={{ color: "#8898b8" }}>От кого:</span>
+                <span className="text-white">{emailModal.from}</span>
+              </div>
+              <div className="flex gap-3">
+                <span className="w-16 flex-shrink-0 font-medium" style={{ color: "#8898b8" }}>Кому:</span>
+                <span style={{ color: "#4ade80" }}>{emailModal.to}</span>
+              </div>
+              <div className="flex gap-3 items-center">
+                <span className="w-16 flex-shrink-0 font-medium" style={{ color: "#8898b8" }}>Тема:</span>
+                <input
+                  value={emailSubject}
+                  onChange={(e) => setEmailSubject(e.target.value)}
+                  className="flex-1 text-sm px-2 py-1 rounded"
+                  style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(99,130,255,0.3)", color: "#fff" }}
+                />
+              </div>
+            </div>
+
+            {/* Resend warning */}
+            {!emailModal.resendConfigured && (
+              <div className="rounded-lg p-3 text-sm" style={{ background: "rgba(245,158,11,0.1)", border: "1px solid rgba(245,158,11,0.3)", color: "#f59e0b" }}>
+                ⚠️ <strong>RESEND_API_KEY не настроен</strong> — письмо не будет отправлено реально, но будет записано в EmailLog со статусом «failed».
+              </div>
+            )}
+
+            {/* HTML preview */}
+            <div>
+              <div className="text-xs font-medium mb-2" style={{ color: "#8898b8" }}>Содержимое письма:</div>
+              <div className="rounded-lg overflow-hidden" style={{ border: "1px solid rgba(99,130,255,0.15)", height: "380px" }}>
+                <iframe
+                  srcDoc={emailModal.html}
+                  className="w-full h-full"
+                  sandbox="allow-same-origin"
+                  title="Email preview"
+                />
+              </div>
+            </div>
+
+            {/* Actions */}
+            <div className="flex gap-3 pt-2">
+              <button onClick={() => setEmailModal(null)} className="btn-secondary flex-1 !py-3">
+                Отмена
+              </button>
+              <button
+                onClick={handleSendAuthorEmail}
+                disabled={sendingEmail}
+                className="btn-primary flex-1 !py-3 disabled:opacity-50"
+              >
+                {sendingEmail ? "Отправка..." : emailModal.resendConfigured ? "📤 Отправить письмо" : "📋 Записать в лог (без отправки)"}
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    )}
   );
 }
