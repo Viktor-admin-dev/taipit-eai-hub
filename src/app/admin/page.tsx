@@ -2,6 +2,44 @@
 
 import { useEffect, useState } from "react";
 
+function BatchTelegramButton() {
+  const [running, setRunning] = useState(false);
+  const [result, setResult] = useState<string | null>(null);
+
+  const handle = async () => {
+    setRunning(true);
+    setResult(null);
+    try {
+      const res = await fetch("/api/admin/batch-telegram", { method: "POST" });
+      const data = await res.json();
+      setResult(data.message || data.error || JSON.stringify(data));
+    } catch {
+      setResult("Ошибка запроса");
+    } finally {
+      setRunning(false);
+    }
+  };
+
+  return (
+    <div className="card flex items-center justify-between gap-4">
+      <div>
+        <div className="text-white font-semibold">📨 Отправить оценки в Telegram</div>
+        <div className="text-sm mt-1" style={{ color: "#8898b8" }}>
+          Разослать уведомления по всем уже оценённым заявкам (~0.5 сек между сообщениями)
+        </div>
+        {result && <div className="text-sm mt-2" style={{ color: "#4ade80" }}>{result}</div>}
+      </div>
+      <button
+        onClick={handle}
+        disabled={running}
+        className="btn-primary !px-6 !py-2 text-sm flex-shrink-0 disabled:opacity-50"
+      >
+        {running ? "Отправка..." : "Отправить"}
+      </button>
+    </div>
+  );
+}
+
 function BatchEvaluateButton() {
   const [running, setRunning] = useState(false);
   const [result, setResult] = useState<string | null>(null);
@@ -277,6 +315,7 @@ export default function AdminDashboardPage() {
 
       {/* AI Tools */}
       <BatchEvaluateButton />
+      <BatchTelegramButton />
 
       {/* Recent Applications */}
       <div className="card">

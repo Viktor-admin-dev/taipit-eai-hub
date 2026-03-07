@@ -639,7 +639,7 @@ export default function ApplicationDetailPage() {
 
                   {/* For business experts */}
                   <div className="p-3 rounded-xl" style={{ background: "rgba(99,130,255,0.05)" }}>
-                    <div className="text-xs font-medium mb-2" style={{ color: "#f59e0b" }}>👔 Для Оксаны и Шиканова</div>
+                    <div className="text-xs font-medium mb-2" style={{ color: "#f59e0b" }}>📋 Суть для руководства</div>
                     <div className="space-y-1 text-xs" style={{ color: "#8898b8" }}>
                       <p><strong>Проблема:</strong> {ev.problemSimple}</p>
                       <p><strong>Решение:</strong> {ev.solutionSimple}</p>

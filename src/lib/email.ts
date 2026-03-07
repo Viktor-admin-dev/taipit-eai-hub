@@ -316,7 +316,7 @@ export function buildCommissionEmail(
       <p><strong>Зона роста:</strong> ${evaluation.authorGrowthZone}</p>
     </div>
     <div class="section">
-      <div class="section-title">👔 Для Оксаны и Шиканова</div>
+      <div class="section-title">📋 Суть для руководства</div>
       <div class="for-member"><strong>Проблема простыми словами:</strong> ${evaluation.problemSimple}</div>
       <div class="for-member"><strong>Решение (аналогия):</strong> ${evaluation.solutionSimple}</div>
       <div class="for-member"><strong>Бизнес-эффект:</strong> ${evaluation.businessEffect}</div>
