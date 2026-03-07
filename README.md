@@ -1,275 +1,302 @@
-# Taipit EAI Hub
+# EAI Hub — Платформа конкурса EAI Challenge
 
-Внутренний портал холдинга Тайпит для конкурса идей по внедрению Enterprise AI. Сотрудники подают заявки, голосуют, читают истории коллег. Администратор управляет заявками и смотрит аналитику.
+Внутренний портал холдинга **Тайпит** для конкурса идей по внедрению Enterprise AI.
+Сотрудники подают заявки, получают AI-оценку, читают новости. Комиссия управляет конкурсом через админ-панель.
 
-**Продакшен:** https://taipit.starec.ai
-**Сервер:** Hetzner 136.243.71.213 (Docker, порт 3010)
+**Стек:** Next.js 16 · Prisma · SQLite · Docker · Claude API · Telegram Bot API · Resend
 
-## Стек технологий
+---
 
-- **Next.js 16.1.6** (React 19, TypeScript, App Router)
-- **Prisma ORM** + SQLite
-- **TailwindCSS 4** (тёмная тема)
-- **Recharts** (графики в админке)
-- **JWT** (авторизация админа + форум-сотрудников)
-- **Docker** (продакшен-деплой)
+## Что умеет система
 
-## Структура проекта
+### Публичная часть (для сотрудников)
 
-```
-src/
-├── app/
-│   ├── page.tsx                    # Главная (карусель, статистика, CTA)
-│   ├── why/page.tsx                # Зачем конкурс (письмо акционера, бенефиты)
-│   ├── testimonials/page.tsx       # Истории успеха (4 кейса из 55-го дивизиона)
-│   ├── contest/page.tsx            # Конкурс (этапы, призы, условия, форма заявки)
-│   ├── how-to-participate/page.tsx # Как участвовать (воронка, тьюторы, FAQ)
-│   ├── voting/page.tsx             # Система голосования (описание, FAQ)
-│   ├── voting/algorithm/page.tsx   # Калькулятор алгоритма голосования
-│   ├── forum/
-│   │   ├── layout.tsx              # ForumAuthProvider обёртка
-│   │   ├── page.tsx                # Форум (список тем, создание вопроса)
-│   │   └── [id]/page.tsx           # Тема + ответы + форма ответа
-│   ├── resources/page.tsx          # Ресурсы и обучение
-│   ├── admin/
-│   │   ├── login/page.tsx          # Вход в админку
-│   │   ├── page.tsx                # Дашборд (KPI, графики, последние заявки)
-│   │   ├── applications/page.tsx   # Управление заявками (фильтры, CSV-экспорт)
-│   │   ├── analytics/page.tsx      # Аналитика посещений
-│   │   └── forum/page.tsx          # Модерация форума (одобрение, ответы, удаление)
-│   └── api/
-│       ├── admin/login/             # POST — вход (пароль → JWT-кука)
-│       ├── admin/verify/            # GET — проверка сессии
-│       ├── admin/logout/            # POST — выход
-│       ├── admin/dashboard/         # GET — данные дашборда
-│       ├── applications/            # GET — список, POST — новая заявка
-│       ├── applications/[id]/       # GET — одна заявка
-│       ├── forum/
-│       │   ├── auth/login/          # POST — вход сотрудника (JWT-кука forum_token)
-│       │   ├── auth/verify/         # GET — проверка сессии форума
-│       │   ├── auth/logout/         # POST — выход
-│       │   ├── topics/              # GET — список тем, POST — создать тему
-│       │   ├── topics/[id]/         # GET — тема + ответы
-│       │   └── replies/             # POST — написать ответ
-│       ├── admin/forum/
-│       │   ├── topics/              # GET — список тем для модерации
-│       │   ├── topics/[id]/         # GET/PATCH/DELETE — детали/модерация/удаление темы
-│       │   ├── replies/             # GET — pending ответы, POST — ответ модератора
-│       │   └── replies/[id]/        # PATCH/DELETE — модерация/удаление ответа
-│       ├── divisions/               # GET — список дивизионов
-│       ├── stats/                   # GET — статистика для главной
-│       └── analytics/               # GET/POST — аналитика посещений
-├── components/
-│   ├── Header.tsx                  # Навигация (7 пунктов + CTA)
-│   ├── Footer.tsx                  # Подвал
-│   ├── HeroCarousel.tsx            # Карусель на главной (5 слайдов, автоплей)
-│   ├── StatsSection.tsx            # Блок статистики (20 дивизионов, 30 премий...)
-│   ├── ApplicationForm.tsx         # Форма подачи заявки (многосекционная)
-│   ├── ForumAuth.tsx               # Контекст авторизации форума + форма входа
-│   └── Avatar.tsx                  # Аватар с инициалами
-├── data/
-│   └── testimonials.ts             # Истории, дивизионы, таймлайн конкурса
-└── middleware.ts                    # Трекинг посещений страниц
-```
+| Страница | URL | Что делает |
+|---|---|---|
+| Главная | `/` | Лэндинг с цитатами, статистикой и CTA |
+| Зачем | `/why` | Письмо акционера, причины участвовать |
+| Новости | `/news` | Лента AI-постов о заявках коллег |
+| Истории успеха | `/testimonials` | Примеры внедрения AI в компании |
+| Конкурс | `/contest` | Правила, этапы, призы + форма подачи заявки |
+| Как участвовать | `/how-to-participate` | Пошаговая инструкция |
+| Голосование | `/voting` | Алгоритм выбора победителей |
+| Форум | `/forum` | Вопросы и ответы с модерацией |
+| Моя заявка | `/my-application` | Просмотр AI-оценки + редактирование заявки |
 
-## Админ-панель
+### Форма заявки
+- 6 категорий, 3 типа (идея/прототип/внедрение), индивидуально или команда
+- **AI-превью** перед отправкой: частичный анализ с советами по улучшению
+- После отправки: сотрудник может вернуться и увидеть полную оценку + рекомендации
 
-### Вход
-
-- **URL:** https://taipit.starec.ai/admin/login
-- **Пароль:** `eai-hub-admin-2026`
-- Сессия живёт 24 часа (JWT в httpOnly-куке)
-
-### Возможности
+### Админ-панель (`/admin`)
 
 | Раздел | Что делает |
-|--------|------------|
-| **Дашборд** (`/admin`) | KPI-карточки, графики заявок по дням/категориям/дивизионам, таблица последних заявок |
-| **Заявки** (`/admin/applications`) | Список всех заявок с фильтрами (дивизион, категория, тип, статус), пагинация, CSV-экспорт, детальный просмотр |
-| **Форум** (`/admin/forum`) | Модерация тем и ответов, ответ от имени модератора, удаление тем/ответов, закрепление тем |
-| **Аналитика** (`/admin/analytics`) | Посещаемость за неделю/месяц/всё время, популярные страницы, уникальные посетители, CSV-экспорт |
+|---|---|
+| **Дашборд** | KPI-карточки, графики заявок по дням/категориям/дивизионам, батч-операции |
+| **Заявки** | Список с фильтрами, поиском; изменение статуса, CSV-экспорт |
+| **Просмотр заявки** | Полный AI-анализ: оценки, вердикт, профиль автора, потенциал |
+| **Уведомления** | Превью email → редактирование → отправка через Resend |
+| **Telegram** | Отправка оценки в групповой чат комиссии |
+| **Новости** | Управление постами: скрыть/показать/удалить |
+| **Форум** | Модерация тем и ответов, ответ от имени модератора |
+| **Аналитика** | Посещаемость страниц, уникальные пользователи |
 
-## Форум
+### AI-инструменты на дашборде (батч-операции)
 
-### Как работает
+- **🤖 AI-оценка всех заявок** — запускает оценку Claude для всех необработанных заявок (~2 мин)
+- **📨 Отправить оценки в Telegram** — отправляет все оценки в группу комиссии (~0.5 сек/заявка)
+- **📰 Сгенерировать новости** — создаёт мотивационные посты по оценённым заявкам (~2 сек/заявка)
 
-Форум позволяет сотрудникам задавать вопросы, а модератору — отвечать на них из админки.
+---
 
-**Для сотрудников** (https://taipit.starec.ai/forum):
-- Авторизация: имя + email + дивизион (без пароля, JWT-кука `forum_token` на 7 дней)
-- Создание вопроса: категория + заголовок + текст
-- Премодерация: вопрос виден автору как "На модерации", остальным — после одобрения
-- Ответы на темы других сотрудников (тоже с премодерацией)
+## Переменные окружения
 
-**Для модератора** (https://taipit.starec.ai/admin/forum):
-- Таб "На модерации": pending темы и ответы с кнопками Одобрить / Отклонить / Удалить
-- Таб "Все темы": таблица всех тем с фильтром по статусу, закреплением, удалением
-- Клик на тему → модалка с деталями, всеми ответами и формой ответа модератора
-- Ответ модератора автоматически публикуется + одобряет тему
+> Все переменные задаются в `docker-compose.yml` на сервере. В репозитории `.env` файла **нет**.
 
-### Авторизация форума
+| Переменная | Обяз. | Описание |
+|---|---|---|
+| `DATABASE_URL` | ✅ | `file:/app/prisma/dev.db` |
+| `JWT_SECRET` | ✅ | Секрет для JWT-токенов (любая длинная строка) |
+| `ADMIN_PASSWORD` | ✅ | Пароль входа в `/admin` |
+| `ANTHROPIC_API_KEY` | ✅ | Ключ Claude API — нужен для AI-оценки и новостей |
+| `TELEGRAM_BOT_TOKEN` | ⚡ | Токен Telegram-бота (формат `123456:AAE...`) |
+| `TELEGRAM_CHAT_ID` | ⚡ | ID группового чата (отрицательное число `-100...`) |
+| `RESEND_API_KEY` | ⚡ | Ключ Resend для отправки email авторам/комиссии |
+| `EMAIL_FROM` | — | Адрес отправителя (по умолчанию `eai@taipit.starec.ai`) |
 
-| Кука | Назначение | Срок |
-|------|-----------|------|
-| `forum_token` | JWT для сотрудников на форуме | 7 дней |
-| `admin_token` | JWT для админ-панели | 24 часа |
+> ⚡ — не обязательны, но нужны для полного функционала уведомлений
 
-## Локальная разработка
+---
+
+## Деплой на новый сервер
 
 ### Требования
 
-- Node.js 20+
-- npm
+- Linux-сервер с Docker и Docker Compose
+- Git
+- Nginx (для reverse proxy)
+- Домен с DNS-записью на сервер
 
-### Запуск
+### Шаг 1 — Клонировать репозиторий
 
 ```bash
-# Клонировать репозиторий
 git clone https://github.com/Viktor-admin-dev/taipit-eai-hub.git
 cd taipit-eai-hub
-
-# Установить зависимости
-npm install
-
-# Создать базу данных
-npx prisma db push
-
-# (Опционально) Заполнить тестовыми данными
-npm run db:seed
-
-# Запустить dev-сервер
-npm run dev
 ```
 
-Сайт будет доступен на http://localhost:3000
+### Шаг 2 — Настроить docker-compose.yml
 
-### Переменные окружения
+Отредактировать файл `docker-compose.yml`:
 
-Создайте файл `.env.local`:
+```yaml
+version: '3.8'
 
-```env
-DATABASE_URL="file:./prisma/dev.db"
-ADMIN_PASSWORD="eai-hub-admin-2026"
-JWT_SECRET="taipit-eai-hub-secret-key-2026"
+services:
+  taipit-eai-hub:
+    build: .
+    container_name: taipit-eai-hub
+    restart: unless-stopped
+    ports:
+      - "3010:3000"
+    environment:
+      - NODE_ENV=production
+      - DATABASE_URL=file:/app/prisma/dev.db
+      - JWT_SECRET=замените-на-случайную-строку-32+-символа
+      - ADMIN_PASSWORD=замените-на-пароль-администратора
+      - ANTHROPIC_API_KEY=sk-ant-api03-...
+      - TELEGRAM_BOT_TOKEN=1234567890:AAExxxxxxxx
+      - TELEGRAM_CHAT_ID=-1001234567890
+      - RESEND_API_KEY=re_xxxxxxxxxxxx
+      - EMAIL_FROM=eai@taipit.ru
+    volumes:
+      - db_data:/app/prisma
+
+volumes:
+  db_data:
 ```
 
-### Полезные команды
+### Шаг 3 — Запустить контейнер
 
 ```bash
-npm run dev          # Dev-сервер с hot reload
-npm run build        # Продакшен-сборка
-npm run start        # Запуск продакшен-сборки
-npm run lint         # Проверка кода (ESLint)
-npm run db:push      # Применить схему к БД
-npm run db:seed      # Заполнить БД тестовыми данными
-npm run db:studio    # Открыть Prisma Studio (GUI для БД)
+docker compose up -d --build
 ```
 
-## Деплой на продакшен
+Первый запуск: ~5-7 минут (сборка Next.js + инициализация БД).
 
-### Как устроен деплой
+Проверить запуск:
+```bash
+docker ps | grep taipit
+docker logs taipit-eai-hub --tail 20
+```
 
-Приложение работает в Docker-контейнере на сервере Hetzner (136.243.71.213):
+### Шаг 4 — Настроить Nginx
 
-- **Docker** собирает оптимизированный образ (multi-stage build, Node 20)
-- **Контейнер** `taipit-eai-hub` слушает порт 3010
-- **Nginx** проксирует `taipit.starec.ai` → `localhost:3010`
-- **Cloudflare** обеспечивает DNS и CDN
-- **SSL** через Let's Encrypt
+```nginx
+server {
+    listen 80;
+    server_name eai.taipit.ru;   # ← ваш домен
 
-### Внесение изменений
+    location / {
+        proxy_pass http://localhost:3010;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection 'upgrade';
+        proxy_set_header Host $host;
+        proxy_cache_bypass $http_upgrade;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    }
+}
+```
 
 ```bash
-# 1. Внести изменения в код локально
+nginx -t && systemctl reload nginx
+```
 
-# 2. Закоммитить и запушить в GitHub
-git add .
-git commit -m "описание изменений"
+### Шаг 5 — SSL (Let's Encrypt)
+
+```bash
+certbot --nginx -d eai.taipit.ru
+```
+
+### Шаг 6 — Проверить работу
+
+Открыть в браузере:
+- `https://eai.taipit.ru` — главная
+- `https://eai.taipit.ru/admin` — войти с паролем из `ADMIN_PASSWORD`
+- `https://eai.taipit.ru/news` — лента новостей
+
+---
+
+## Обновление
+
+```bash
+# 1. Запушить изменения в GitHub (с локальной машины разработчика)
 git push origin main
 
-# 3. Подключиться к серверу
-ssh root@136.243.71.213 -i ~/.ssh/id_ed25519
-
-# 4. Обновить код и пересобрать контейнер
-cd /root/taipit-eai-hub
-git pull
-docker compose up -d --build
-
-# 5. Проверить что контейнер запустился
-docker ps | grep taipit
+# 2. На сервере подтянуть и пересобрать
+cd /root/taipit-eai-hub    # или ваш путь
+git pull && docker compose up -d --build
 ```
 
-### Быстрый деплой одной командой
+Одной командой с локальной машины:
+```bash
+ssh root@SERVER_IP "cd /root/taipit-eai-hub && git pull && docker compose up -d --build"
+```
+
+---
+
+## Настройка Telegram-бота
+
+1. Создать бота через `@BotFather` → `/newbot` → получить токен
+2. Добавить бота в группу комиссии
+3. Отключить Group Privacy:
+   `@BotFather` → `/mybots` → выбрать бота → `Bot Settings` → `Group Privacy` → `Turn off`
+4. Написать что-нибудь в группу (чтобы бот получил сообщение)
+5. Получить `chat_id`:
+   ```
+   https://api.telegram.org/bot<TOKEN>/getUpdates
+   ```
+   Найти `"chat":{"id":-XXXXXXXXXX}` — это `TELEGRAM_CHAT_ID`
+6. Прописать оба значения в `docker-compose.yml` и перезапустить контейнер
+
+---
+
+## Настройка email (Resend)
+
+1. Зарегистрироваться на [resend.com](https://resend.com)
+2. Добавить домен отправителя (например `taipit.ru`) → верифицировать DNS
+3. Создать API-ключ → прописать в `RESEND_API_KEY`
+4. Установить `EMAIL_FROM=eai@taipit.ru`
+
+---
+
+## Структура базы данных
+
+| Таблица | Описание |
+|---|---|
+| `Division` | Дивизионы холдинга (заполняется при первом старте) |
+| `Application` | Заявки участников конкурса |
+| `TeamMember` | Члены команды в командных заявках |
+| `AIEvaluation` | AI-оценки: баллы по 5 критериям, вердикт, рекомендации |
+| `CommissionMember` | Email-адреса членов комиссии для рассылки |
+| `NewsPost` | Посты ленты новостей (AI-генерация) |
+| `EmailCampaign` | Email/Telegram-контент, созданный вместе с NewsPost |
+| `ForumTopic` | Темы форума |
+| `ForumReply` | Ответы на форуме |
+| `EmailLog` | Лог отправленных писем |
+| `PageVisit` | Аналитика посещений страниц |
+
+---
+
+## AI-система оценки
+
+### Модели Claude
+
+| Операция | Модель |
+|---|---|
+| Полная оценка заявки (админка) | `claude-sonnet-4-20250514` |
+| Превью при заполнении заявки | `claude-haiku-4-5-20251001` |
+| Генерация новостей | `claude-haiku-4-5-20251001` |
+
+### Критерии оценки (0-100 баллов каждый)
+
+| Критерий | Вес |
+|---|---|
+| Бизнес-ценность | 25% |
+| Инновационность | 20% |
+| Реализуемость | 25% |
+| Масштабируемость | 15% |
+| Качество описания | 15% |
+
+### Вердикты
+
+| Вердикт | Порог | Смысл |
+|---|---|---|
+| 🟢 support | ≥ 70 | Поддержать — идея готова к реализации |
+| 🟡 develop | 40–69 | Развить — есть потенциал, нужна доработка |
+| 🔴 rethink | < 40 | Переосмыслить — нужна серьёзная доработка |
+
+---
+
+## Разработка локально
 
 ```bash
-ssh root@136.243.71.213 "cd /root/taipit-eai-hub && git pull && docker compose up -d --build"
+git clone https://github.com/Viktor-admin-dev/taipit-eai-hub.git
+cd taipit-eai-hub
+npm install
+
+# Инициализировать БД
+DATABASE_URL="file:./prisma/dev.db" npx prisma db push
+DATABASE_URL="file:./prisma/dev.db" npx prisma db seed
+
+# Запустить
+DATABASE_URL="file:./prisma/dev.db" ADMIN_PASSWORD=admin JWT_SECRET=dev-secret npm run dev
 ```
 
-### Логи контейнера
+Открыть: http://localhost:3000
+Админка: http://localhost:3000/admin (пароль: `admin`)
+
+### Прямой доступ к БД
 
 ```bash
-# Последние логи
-ssh root@136.243.71.213 "docker logs taipit-eai-hub --tail 50"
+# Lokally
+DATABASE_URL="file:./prisma/dev.db" npx prisma studio
 
-# Логи в реальном времени
-ssh root@136.243.71.213 "docker logs taipit-eai-hub -f"
-
-# Логи nginx
-ssh root@136.243.71.213 "tail -50 /var/log/nginx/taipit-access.log"
+# На продакшен-сервере
+sqlite3 /var/lib/docker/volumes/taipit-eai-hub_db_data/_data/dev.db 'SELECT * FROM Application;'
 ```
 
-## База данных
+---
 
-SQLite-файл хранится внутри контейнера по пути `/app/prisma/dev.db`.
+## Известные технические нюансы
 
-### Модели
+1. **entrypoint.sh** — запускает `prisma db push` при старте контейнера, чтобы схема БД применялась к production-volume (не к временной БД при билде)
 
-| Модель | Описание |
-|--------|----------|
-| `Division` | 20 дивизионов холдинга |
-| `User` | Сотрудники (employee, leader, moderator, admin) |
-| `Application` | Заявки на конкурс (идея/прототип/внедрение) |
-| `TeamMember` | Участники команды для групповых заявок |
-| `Vote` | Голоса за заявки |
-| `StatusChange` | История изменений статусов заявок |
-| `Testimonial` | Истории успеха |
-| `ForumTopic` / `ForumReply` | Форум |
-| `PageVisit` / `DailyStat` | Аналитика посещений |
+2. **JSON от Claude** — иногда приходит обёрнутым в \`\`\`json \`\`\`. В коде везде стоит strip-логика перед `JSON.parse()`
 
-### Категории заявок
+3. **force-dynamic** — API-роуты без `NextRequest` параметра нужно помечать `export const dynamic = "force-dynamic"`, иначе Next.js пре-рендерит их при билде (когда БД пустая)
 
-- `efficiency` — Оптимизация процессов
-- `new_process` — Новый процесс
-- `new_product` — Новый продукт
-- `new_feature` — Новая функция
-- `analytics` — Аналитика
-- `content` — Контент
+4. **Prisma версия** — проект использует 5.22.0, глобальный `prisma` может быть другой версии — всегда использовать `npx prisma` из папки проекта
 
-### Статусы заявок
-
-`submitted` → `reviewing` → `finalist` → `winner` / `rejected`
-
-## Призовой фонд
-
-| Место | Сумма | Количество |
-|-------|-------|------------|
-| 1 место | 150 000 руб. | 5 премий |
-| 2 место | 100 000 руб. | 10 премий |
-| 3 место | 50 000 руб. | 15 премий |
-| **Итого** | | **30 премий** |
-
-## Важные файлы
-
-| Файл | Что менять |
-|------|-----------|
-| `src/app/contest/page.tsx` | Этапы, призы, условия конкурса |
-| `src/components/StatsSection.tsx` | Числа на главной (дивизионы, премии) и тултип |
-| `src/components/HeroCarousel.tsx` | Слайды на главной |
-| `src/data/testimonials.ts` | Истории успеха, список дивизионов, таймлайн |
-| `src/app/why/page.tsx` | Письмо акционера, причины участвовать |
-| `src/components/ForumAuth.tsx` | Контекст + форма авторизации форума |
-| `src/app/admin/forum/page.tsx` | Админка форума (модерация, ответы, удаление) |
-| `prisma/schema.prisma` | Схема базы данных |
-| `prisma/seed.ts` | Сид данных (дивизионы, testimonials, модератор) |
-| `Dockerfile` | Настройки сборки, переменные окружения |
-| `docker-compose.yml` | Порт, настройки контейнера |
+5. **git push перед деплоем** — сервер тянет из GitHub (`git pull`), поэтому локальные коммиты нужно сначала запушить
