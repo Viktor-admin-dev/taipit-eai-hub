@@ -9,6 +9,7 @@ export default function Header() {
   const navLinks = [
     { href: "/", label: "Главная" },
     { href: "/why", label: "Зачем" },
+    { href: "/news", label: "Новости" },
     { href: "/testimonials", label: "Истории успеха" },
     { href: "/contest", label: "Конкурс" },
     { href: "/how-to-participate", label: "Как участвовать" },
