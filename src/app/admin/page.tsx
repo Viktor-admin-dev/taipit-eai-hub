@@ -40,6 +40,44 @@ function BatchTelegramButton() {
   );
 }
 
+function BatchNewsButton() {
+  const [running, setRunning] = useState(false);
+  const [result, setResult] = useState<string | null>(null);
+
+  const handle = async () => {
+    setRunning(true);
+    setResult(null);
+    try {
+      const res = await fetch("/api/admin/batch-news", { method: "POST" });
+      const data = await res.json();
+      setResult(data.message || data.error || JSON.stringify(data));
+    } catch {
+      setResult("Ошибка запроса");
+    } finally {
+      setRunning(false);
+    }
+  };
+
+  return (
+    <div className="card flex items-center justify-between gap-4">
+      <div>
+        <div className="text-white font-semibold">📰 Сгенерировать новости</div>
+        <div className="text-sm mt-1" style={{ color: "#8898b8" }}>
+          Создать новостные посты для всех оценённых заявок без новостей (~2 сек на заявку)
+        </div>
+        {result && <div className="text-sm mt-2" style={{ color: "#4ade80" }}>{result}</div>}
+      </div>
+      <button
+        onClick={handle}
+        disabled={running}
+        className="btn-primary !px-6 !py-2 text-sm flex-shrink-0 disabled:opacity-50"
+      >
+        {running ? "Генерация..." : "Создать"}
+      </button>
+    </div>
+  );
+}
+
 function BatchEvaluateButton() {
   const [running, setRunning] = useState(false);
   const [result, setResult] = useState<string | null>(null);
@@ -316,6 +354,7 @@ export default function AdminDashboardPage() {
       {/* AI Tools */}
       <BatchEvaluateButton />
       <BatchTelegramButton />
+      <BatchNewsButton />
 
       {/* Recent Applications */}
       <div className="card">
