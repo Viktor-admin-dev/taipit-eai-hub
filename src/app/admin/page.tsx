@@ -1,6 +1,44 @@
 "use client";
 
 import { useEffect, useState } from "react";
+
+function BatchEvaluateButton() {
+  const [running, setRunning] = useState(false);
+  const [result, setResult] = useState<string | null>(null);
+
+  const handle = async () => {
+    setRunning(true);
+    setResult(null);
+    try {
+      const res = await fetch("/api/admin/batch-evaluate", { method: "POST" });
+      const data = await res.json();
+      setResult(data.message || JSON.stringify(data));
+    } catch {
+      setResult("Ошибка запроса");
+    } finally {
+      setRunning(false);
+    }
+  };
+
+  return (
+    <div className="card flex items-center justify-between gap-4">
+      <div>
+        <div className="text-white font-semibold">🤖 AI-оценка всех заявок</div>
+        <div className="text-sm mt-1" style={{ color: "#8898b8" }}>
+          Запустить AI-оценку для заявок без оценки (работает в фоне ~2 мин)
+        </div>
+        {result && <div className="text-sm mt-2" style={{ color: "#4ade80" }}>{result}</div>}
+      </div>
+      <button
+        onClick={handle}
+        disabled={running}
+        className="btn-primary !px-6 !py-2 text-sm flex-shrink-0 disabled:opacity-50"
+      >
+        {running ? "Запускается..." : "Запустить"}
+      </button>
+    </div>
+  );
+}
 import {
   AreaChart,
   Area,
@@ -236,6 +274,9 @@ export default function AdminDashboardPage() {
           </div>
         )}
       </div>
+
+      {/* AI Tools */}
+      <BatchEvaluateButton />
 
       {/* Recent Applications */}
       <div className="card">

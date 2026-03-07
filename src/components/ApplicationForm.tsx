@@ -354,6 +354,13 @@ export default function ApplicationForm() {
         <p style={{ color: "#8898b8" }} className="mb-6">
           Мы рассмотрим вашу заявку и свяжемся с вами по указанному email.
         </p>
+        <a
+          href="/my-application"
+          className="btn-secondary inline-block mb-4"
+        >
+          Редактировать заявку позже
+        </a>
+        <br />
         <button
           onClick={() => {
             setIsSubmitted(false);
