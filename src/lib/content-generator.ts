@@ -63,7 +63,8 @@ export async function generateAndSaveContent(applicationId: number): Promise<{
     });
 
     const text = message.content[0].type === "text" ? message.content[0].text : "";
-    const content: ContentResult = JSON.parse(text);
+    const jsonText = text.replace(/^```(?:json)?\s*/i, "").replace(/\s*```\s*$/i, "").trim();
+    const content: ContentResult = JSON.parse(jsonText);
 
     const post = await prisma.newsPost.create({
       data: {

@@ -33,7 +33,8 @@ export async function POST(request: NextRequest) {
     });
 
     const text = message.content[0].type === "text" ? message.content[0].text : "";
-    const analysis = JSON.parse(text);
+    const jsonText = text.replace(/^```(?:json)?\s*/i, "").replace(/\s*```\s*$/i, "").trim();
+    const analysis = JSON.parse(jsonText);
 
     return NextResponse.json({
       scores: analysis.scores,

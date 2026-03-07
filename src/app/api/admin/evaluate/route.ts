@@ -40,7 +40,8 @@ export async function POST(request: NextRequest) {
     });
 
     const text = message.content[0].type === "text" ? message.content[0].text : "";
-    const parsed = JSON.parse(text);
+    const jsonText = text.replace(/^```(?:json)?\s*/i, "").replace(/\s*```\s*$/i, "").trim();
+    const parsed = JSON.parse(jsonText);
 
     const scores = parsed.scores;
     const forAuthor = parsed.forAuthor || {};
