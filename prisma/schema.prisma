@@ -78,6 +78,139 @@ model Application {
   teamMembers         TeamMember[]
   votes               Vote[]
   statusHistory       StatusChange[]
+  aiEvaluations      AIEvaluation[]
+  telegramLogs       TelegramLog[]
+  newsPosts          NewsPost[]
+}
+
+model AIEvaluation {
+  id               Int         @id @default(autoincrement())
+  applicationId    Int
+  application      Application @relation(fields: [applicationId], references: [id])
+
+  // Scores
+  scoreBusiness    Int
+  scoreInnovation  Int
+  scoreFeasibility Int
+  scoreScalability Int
+  scoreQuality     Int
+  totalScore       Float
+
+  // Verdict
+  verdict          String      // "support" | "develop" | "rethink"
+  oneLiner         String
+
+  // For author
+  authorStrengths     String  // JSON array
+  developmentSteps    String  // JSON array
+  resourcesForStart   String  // JSON array
+  questionsToThink    String  // JSON array
+
+  // For commission — author profile
+  authorAiLevel    String      // "beginner" | "growing" | "advanced"
+  authorQualities  String      // JSON array
+  authorGrowthZone String
+
+  // For commission — simplified idea
+  problemSimple    String
+  solutionSimple   String
+  businessEffect   String
+
+  // For commission — hidden potential
+  hiddenPotential  String
+  growthPath       String
+  synergies        String      // JSON array
+
+  // Recommendations
+  mentorshipNeeded    String
+  suggestedMentor     String
+  resourcesToAllocate String   // JSON array
+
+  // Legacy fields
+  summary          String
+  strengths        String      // JSON array
+  weaknesses       String      // JSON array
+  recommendations  String      // JSON array
+
+  // Meta
+  modelUsed           String   @default("claude-sonnet-4-20250514")
+  promptTokens        Int?
+  completionTokens    Int?
+
+  createdAt           DateTime @default(now())
+
+  @@index([applicationId])
+}
+
+model CommissionMember {
+  id        Int      @id @default(autoincrement())
+  name      String
+  email     String   @unique
+  role      String   // "ai_expert" | "business_expert" | "ceo"
+  profile   String?  // "ai_advanced" | "business_focused"
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+}
+
+model EmailLog {
+  id            Int      @id @default(autoincrement())
+  to            String
+  subject       String
+  recipientType String   // "author" | "commission"
+  applicationId Int?
+  status        String   // "sent" | "failed" | "pending"
+  error         String?
+  sentAt        DateTime @default(now())
+}
+
+model TelegramLog {
+  id            Int         @id @default(autoincrement())
+  applicationId Int
+  application   Application @relation(fields: [applicationId], references: [id])
+  messageId     Int?
+  chatId        String
+  status        String      // "sent" | "failed"
+  error         String?
+  sentAt        DateTime    @default(now())
+
+  @@index([applicationId])
+}
+
+model NewsPost {
+  id            Int         @id @default(autoincrement())
+  applicationId Int?
+  application   Application? @relation(fields: [applicationId], references: [id])
+  title         String
+  body          String
+  cta           String?
+  isPublished   Boolean     @default(true)
+  createdAt     DateTime    @default(now())
+
+  @@index([createdAt])
+}
+
+model EmailCampaign {
+  id             Int      @id @default(autoincrement())
+  subject        String
+  body           String
+  recipientCount Int      @default(0)
+  sentCount      Int      @default(0)
+  status         String   @default("draft") // draft | sending | sent | failed
+  triggerType    String   // "new_application" | "milestone" | "reminder"
+  applicationIds String?  // JSON array
+  createdAt      DateTime @default(now())
+  sentAt         DateTime?
+}
+
+model Subscriber {
+  id           Int      @id @default(autoincrement())
+  email        String   @unique
+  name         String?
+  divisionId   Int?
+  isActive     Boolean  @default(true)
+  subscribedAt DateTime @default(now())
+
+  @@index([isActive])
 }
 
 model StatusChange {

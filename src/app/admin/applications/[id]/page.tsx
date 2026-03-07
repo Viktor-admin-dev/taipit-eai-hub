@@ -4,6 +4,36 @@ import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 
+interface AIEvaluation {
+  id: number;
+  scoreBusiness: number;
+  scoreInnovation: number;
+  scoreFeasibility: number;
+  scoreScalability: number;
+  scoreQuality: number;
+  totalScore: number;
+  verdict: string;
+  oneLiner: string;
+  authorStrengths: string;
+  developmentSteps: string;
+  resourcesForStart: string;
+  questionsToThink: string;
+  authorAiLevel: string;
+  authorQualities: string;
+  authorGrowthZone: string;
+  problemSimple: string;
+  solutionSimple: string;
+  businessEffect: string;
+  hiddenPotential: string;
+  growthPath: string;
+  synergies: string;
+  mentorshipNeeded: string;
+  suggestedMentor: string;
+  resourcesToAllocate: string;
+  modelUsed: string;
+  createdAt: string;
+}
+
 interface Application {
   id: number;
   applicantName: string;
@@ -72,6 +102,11 @@ export default function ApplicationDetailPage() {
   const [statusComment, setStatusComment] = useState("");
   const [scores, setScores] = useState<Record<string, number>>({});
   const [expertComments, setExpertComments] = useState("");
+  const [evaluating, setEvaluating] = useState(false);
+  const [notifyingCommission, setNotifyingCommission] = useState(false);
+  const [notifyingAuthor, setNotifyingAuthor] = useState(false);
+  const [aiEvaluations, setAiEvaluations] = useState<AIEvaluation[]>([]);
+  const [currentEvalIdx, setCurrentEvalIdx] = useState(0);
 
   useEffect(() => {
     fetch(`/api/applications/${params.id}`)
@@ -90,6 +125,11 @@ export default function ApplicationDetailPage() {
       })
       .catch(console.error)
       .finally(() => setLoading(false));
+
+    fetch(`/api/admin/evaluations?applicationId=${params.id}`)
+      .then((r) => r.json())
+      .then((data) => { if (Array.isArray(data)) setAiEvaluations(data); })
+      .catch(console.error);
   }, [params.id]);
 
   const handleSave = async () => {

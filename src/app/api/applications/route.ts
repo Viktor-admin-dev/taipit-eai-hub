@@ -1,5 +1,91 @@
 import { NextRequest, NextResponse } from "next/server";
+import Anthropic from "@anthropic-ai/sdk";
 import prisma from "@/lib/prisma";
+import { buildEvaluationPrompt } from "@/lib/evaluation-prompt";
+import { sendToTelegramGroup } from "@/lib/telegram";
+import { generateAndSaveContent } from "@/lib/content-generator";
+
+const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+
+async function runPostSubmitFlow(applicationId: number) {
+  if (!process.env.ANTHROPIC_API_KEY) return;
+
+  try {
+    const application = await prisma.application.findUnique({
+      where: { id: applicationId },
+      include: { division: true, teamMembers: true },
+    });
+    if (!application) return;
+
+    const prompt = buildEvaluationPrompt(application);
+    const message = await anthropic.messages.create({
+      model: "claude-sonnet-4-20250514",
+      max_tokens: 2500,
+      messages: [{ role: "user", content: prompt }],
+    });
+
+    const text = message.content[0].type === "text" ? message.content[0].text : "";
+    const parsed = JSON.parse(text);
+    const scores = parsed.scores;
+    const forAuthor = parsed.forAuthor || {};
+    const forCommission = parsed.forCommission || {};
+    const legacy = parsed.legacy || {};
+
+    const aiEval = await prisma.aIEvaluation.create({
+      data: {
+        applicationId,
+        scoreBusiness: scores.business,
+        scoreInnovation: scores.innovation,
+        scoreFeasibility: scores.feasibility,
+        scoreScalability: scores.scalability,
+        scoreQuality: scores.quality,
+        totalScore: scores.total,
+        verdict: parsed.verdict,
+        oneLiner: parsed.oneLiner || "",
+        authorStrengths: JSON.stringify(forAuthor.strengths || []),
+        developmentSteps: JSON.stringify(forAuthor.developmentSteps || []),
+        resourcesForStart: JSON.stringify(forAuthor.resources || []),
+        questionsToThink: JSON.stringify(forAuthor.questions || []),
+        authorAiLevel: forCommission.authorProfile?.aiLevel || "growing",
+        authorQualities: JSON.stringify(forCommission.authorProfile?.qualities || []),
+        authorGrowthZone: forCommission.authorProfile?.growthZone || "",
+        problemSimple: forCommission.ideaSimplified?.problem || "",
+        solutionSimple: forCommission.ideaSimplified?.solution || "",
+        businessEffect: forCommission.ideaSimplified?.businessEffect || "",
+        hiddenPotential: forCommission.hiddenPotential?.whatAuthorMissed || "",
+        growthPath: forCommission.hiddenPotential?.growthPath || "",
+        synergies: JSON.stringify(forCommission.hiddenPotential?.synergies || []),
+        mentorshipNeeded: forCommission.support?.mentorshipType || "",
+        suggestedMentor: forCommission.support?.suggestedMentor || "",
+        resourcesToAllocate: JSON.stringify(forCommission.support?.resourcesToAllocate || []),
+        summary: legacy.summary || "",
+        strengths: JSON.stringify(legacy.strengths || []),
+        weaknesses: JSON.stringify(legacy.weaknesses || []),
+        recommendations: JSON.stringify(legacy.recommendations || []),
+        modelUsed: "claude-sonnet-4-20250514",
+        promptTokens: message.usage.input_tokens,
+        completionTokens: message.usage.output_tokens,
+      },
+    });
+
+    await prisma.application.update({
+      where: { id: applicationId },
+      data: {
+        scoreBusiness: scores.business,
+        scoreInnovation: scores.innovation,
+        scoreFeasibility: scores.feasibility,
+        scoreScalability: scores.scalability,
+        scoreQuality: scores.quality,
+        expertComments: legacy.summary,
+      },
+    });
+
+    await sendToTelegramGroup(aiEval, application);
+    await generateAndSaveContent(applicationId);
+  } catch (err) {
+    console.error("Post-submit AI flow error:", err);
+  }
+}
 
 export async function GET(request: NextRequest) {
   try {
@@ -111,6 +197,9 @@ export async function POST(request: NextRequest) {
         teamMembers: true,
       },
     });
+
+    // Run AI evaluation + Telegram + content generation in background
+    runPostSubmitFlow(application.id).catch(console.error);
 
     return NextResponse.json(application, { status: 201 });
   } catch (error) {

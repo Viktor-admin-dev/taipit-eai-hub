@@ -91,20 +91,75 @@ export default function ApplicationForm() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [submittedId, setSubmittedId] = useState<number | null>(null);
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [showPreview, setShowPreview] = useState(false);
+  const [preview, setPreview] = useState<{
+    scores: { business: number; innovation: number; feasibility: number; scalability: number; quality: number; total: number };
+    verdict: string;
+    strengths: string[];
+    improvements: Array<{ field: string; issue: string; suggestion: string; example?: string }>;
+    quickWins: string[];
+    missingInfo: string[];
+    readyToSubmit: boolean;
+    message: string;
+  } | null>(null);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const scoreLabelsMap: Record<string, string> = {
+    business: "Бизнес-ценность",
+    innovation: "Инновационность",
+    feasibility: "Реализуемость",
+    scalability: "Масштабируемость",
+    quality: "Качество описания",
+  };
+  const fieldLabelsMap: Record<string, string> = {
+    title: "Название",
+    descriptionProblem: "Описание проблемы",
+    descriptionSolution: "Описание решения",
+    expectedEffect: "Ожидаемый эффект",
+  };
+  const verdictLabels: Record<string, { text: string; color: string }> = {
+    support: { text: "🟢 Готово к отправке", color: "#4ade80" },
+    develop: { text: "🟡 Можно улучшить", color: "#f59e0b" },
+    rethink: { text: "🔴 Требует доработки", color: "#ef4444" },
+  };
+
+  const getPayload = () => ({
+    ...formData,
+    resourcesNeeded: JSON.stringify([...formData.resourcesNeeded, formData.otherResources].filter(Boolean)),
+    teamMembers: formData.format === "team" ? formData.teamMembers : [],
+  });
+
+  const handlePreview = async () => {
+    setIsAnalyzing(true);
+    try {
+      const res = await fetch("/api/applications/preview", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(formData),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setPreview(data);
+        setShowPreview(true);
+      } else {
+        alert(data.error || "Ошибка анализа");
+      }
+    } catch {
+      alert("Ошибка соединения. Попробуйте позже.");
+    } finally {
+      setIsAnalyzing(false);
+    }
+  };
+
+  const handleSubmit = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
     setIsSubmitting(true);
 
     try {
       const response = await fetch("/api/applications", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          ...formData,
-          resourcesNeeded: JSON.stringify([...formData.resourcesNeeded, formData.otherResources].filter(Boolean)),
-          teamMembers: formData.format === "team" ? formData.teamMembers : [],
-        }),
+        body: JSON.stringify(getPayload()),
       });
 
       const data = await response.json();
@@ -112,6 +167,8 @@ export default function ApplicationForm() {
       if (response.ok) {
         setSubmittedId(data.id);
         setIsSubmitted(true);
+        setShowPreview(false);
+        setPreview(null);
       } else {
         alert(data.error || "Ошибка при отправке заявки");
       }
@@ -155,6 +212,125 @@ export default function ApplicationForm() {
         : [...prev.resourcesNeeded, resource],
     }));
   };
+
+  if (showPreview && preview) {
+    const vl = verdictLabels[preview.verdict] || verdictLabels.develop;
+    return (
+      <div className="max-w-4xl mx-auto space-y-6">
+        <div className="text-center">
+          <h2 className="text-2xl font-bold text-white mb-2">Предварительная оценка заявки</h2>
+          <p style={{ color: "#8898b8" }}>
+            Посмотрите, как комиссия оценит вашу заявку, и улучшите её перед отправкой
+          </p>
+        </div>
+
+        {/* Verdict + total */}
+        <div className="card" style={{ borderLeft: `4px solid ${vl.color}` }}>
+          <div className="flex items-center justify-between mb-4">
+            <span className="text-lg font-semibold" style={{ color: vl.color }}>{vl.text}</span>
+            <span className="text-3xl font-bold" style={{ color: preview.scores.total >= 70 ? "#4ade80" : preview.scores.total >= 50 ? "#f59e0b" : "#ef4444" }}>
+              {Math.round(preview.scores.total)}/100
+            </span>
+          </div>
+          <p className="text-sm" style={{ color: "#8898b8" }}>{preview.message}</p>
+
+          {/* Score bars */}
+          <div className="mt-4 space-y-3">
+            {(["business", "innovation", "feasibility", "scalability", "quality"] as const).map((key) => {
+              const val = preview.scores[key];
+              return (
+                <div key={key}>
+                  <div className="flex justify-between text-sm mb-1">
+                    <span style={{ color: "#8898b8" }}>{scoreLabelsMap[key]}</span>
+                    <span className="text-white">{val}</span>
+                  </div>
+                  <div className="h-2 rounded-full" style={{ background: "rgba(99,130,255,0.15)" }}>
+                    <div
+                      className="h-full rounded-full transition-all"
+                      style={{
+                        width: `${val}%`,
+                        background: val >= 70 ? "#4ade80" : val >= 50 ? "#f59e0b" : "#ef4444",
+                      }}
+                    />
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Strengths */}
+        {preview.strengths.length > 0 && (
+          <div className="card" style={{ borderLeft: "4px solid #4ade80" }}>
+            <h3 className="text-lg font-semibold text-white mb-3">✅ Что уже хорошо</h3>
+            <ul className="space-y-2">
+              {preview.strengths.map((s, i) => (
+                <li key={i} className="flex items-start gap-2 text-sm" style={{ color: "#8898b8" }}>
+                  <span style={{ color: "#4ade80" }}>•</span> {s}
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+
+        {/* Improvements */}
+        {preview.improvements.length > 0 && (
+          <div className="card" style={{ borderLeft: "4px solid #f59e0b" }}>
+            <h3 className="text-lg font-semibold text-white mb-3">💡 Как улучшить</h3>
+            <div className="space-y-4">
+              {preview.improvements.map((imp, i) => (
+                <div key={i} className="p-4 rounded-lg" style={{ background: "rgba(245,158,11,0.08)" }}>
+                  <div className="font-medium text-white mb-1 text-sm">
+                    {fieldLabelsMap[imp.field] || imp.field}
+                  </div>
+                  <p className="text-sm mb-1" style={{ color: "#f59e0b" }}>⚠️ {imp.issue}</p>
+                  <p className="text-sm mb-2" style={{ color: "#8898b8" }}>💡 {imp.suggestion}</p>
+                  {imp.example && (
+                    <div className="text-sm p-2 rounded" style={{ background: "rgba(99,130,255,0.1)", color: "#8898b8" }}>
+                      <strong>Пример:</strong> «{imp.example}»
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Quick wins */}
+        {preview.quickWins.length > 0 && (
+          <div className="card" style={{ borderLeft: "4px solid #6382ff" }}>
+            <h3 className="text-lg font-semibold text-white mb-3">⚡ Быстрые улучшения</h3>
+            <ul className="space-y-2">
+              {preview.quickWins.map((w, i) => (
+                <li key={i} className="flex items-start gap-2 text-sm" style={{ color: "#8898b8" }}>
+                  <span style={{ color: "#6382ff" }}>→</span> {w}
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+
+        {/* Actions */}
+        <div className="flex gap-4 justify-center">
+          <button onClick={() => setShowPreview(false)} className="btn-secondary !px-8 !py-3">
+            ← Вернуться и улучшить
+          </button>
+          <button
+            onClick={() => handleSubmit()}
+            disabled={isSubmitting}
+            className="btn-primary !px-8 !py-3 disabled:opacity-50"
+          >
+            {isSubmitting ? "Отправка..." : preview.readyToSubmit ? "✓ Отправить заявку" : "Отправить как есть"}
+          </button>
+        </div>
+        {!preview.readyToSubmit && (
+          <p className="text-center text-sm" style={{ color: "#f59e0b" }}>
+            ⚠️ Рекомендуем доработать заявку для повышения шансов на победу
+          </p>
+        )}
+      </div>
+    );
+  }
 
   if (isSubmitted) {
     return (
@@ -206,8 +382,10 @@ export default function ApplicationForm() {
     );
   }
 
+  const isFormValid = !!(formData.title && formData.category && formData.type && formData.applicantName && formData.applicantEmail && formData.divisionId && formData.descriptionProblem.length >= 100 && formData.descriptionSolution.length >= 100);
+
   return (
-    <form onSubmit={handleSubmit} className="max-w-4xl mx-auto space-y-8">
+    <form onSubmit={(e) => { e.preventDefault(); handlePreview(); }} className="max-w-4xl mx-auto space-y-8">
       {/* Contact Info */}
       <div className="card">
         <h3 className="text-xl font-semibold text-white mb-6">Контактная информация</h3>
@@ -529,27 +707,27 @@ export default function ApplicationForm() {
         )}
       </div>
 
-      {/* Submit */}
+      {/* Check / Submit */}
       <div className="text-center">
         <button
           type="submit"
-          disabled={isSubmitting || !formData.category || !formData.type}
+          disabled={isAnalyzing || !isFormValid}
           className="btn-primary !px-12 !py-4 text-lg disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          {isSubmitting ? (
+          {isAnalyzing ? (
             <span className="flex items-center gap-2">
               <svg className="animate-spin w-5 h-5" fill="none" viewBox="0 0 24 24">
                 <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                 <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
               </svg>
-              Отправка...
+              Анализируем...
             </span>
           ) : (
-            "Отправить заявку"
+            "🔍 Проверить заявку"
           )}
         </button>
         <p className="text-sm mt-4" style={{ color: "#5a6a8a" }}>
-          Нажимая кнопку, вы соглашаетесь с условиями конкурса
+          AI проанализирует вашу заявку и даст советы по улучшению перед отправкой
         </p>
       </div>
     </form>
