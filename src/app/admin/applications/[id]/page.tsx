@@ -132,6 +132,73 @@ export default function ApplicationDetailPage() {
       .catch(console.error);
   }, [params.id]);
 
+  const handleEvaluate = async () => {
+    setEvaluating(true);
+    try {
+      const res = await fetch("/api/admin/evaluate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ applicationId: parseInt(params.id as string) }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setAiEvaluations((prev) => [data, ...prev]);
+        setCurrentEvalIdx(0);
+        setScores({
+          scoreBusiness: data.scoreBusiness,
+          scoreInnovation: data.scoreInnovation,
+          scoreFeasibility: data.scoreFeasibility,
+          scoreScalability: data.scoreScalability,
+          scoreQuality: data.scoreQuality,
+        });
+      } else {
+        alert(data.error || "Ошибка оценки");
+      }
+    } catch {
+      alert("Ошибка соединения");
+    } finally {
+      setEvaluating(false);
+    }
+  };
+
+  const handleNotifyCommission = async () => {
+    setNotifyingCommission(true);
+    try {
+      const eval_ = aiEvaluations[currentEvalIdx];
+      const res = await fetch("/api/admin/notify-commission", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ applicationId: parseInt(params.id as string), evaluationId: eval_?.id }),
+      });
+      const data = await res.json();
+      if (res.ok) alert(`Письма отправлены: ${data.sent} из ${data.total}`);
+      else alert(data.error || "Ошибка отправки");
+    } catch {
+      alert("Ошибка соединения");
+    } finally {
+      setNotifyingCommission(false);
+    }
+  };
+
+  const handleNotifyAuthor = async () => {
+    setNotifyingAuthor(true);
+    try {
+      const eval_ = aiEvaluations[currentEvalIdx];
+      const res = await fetch("/api/admin/notify-author", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ applicationId: parseInt(params.id as string), evaluationId: eval_?.id }),
+      });
+      const data = await res.json();
+      if (res.ok) alert("Фидбек отправлен автору!");
+      else alert(data.error || "Ошибка отправки");
+    } catch {
+      alert("Ошибка соединения");
+    } finally {
+      setNotifyingAuthor(false);
+    }
+  };
+
   const handleSave = async () => {
     setSaving(true);
     try {
@@ -445,6 +512,143 @@ export default function ApplicationDetailPage() {
               rows={4}
               className="w-full"
             />
+          </div>
+
+          {/* AI Evaluation Card */}
+          <div className="card space-y-4">
+            <div className="flex items-center justify-between">
+              <h3 className="text-lg font-semibold text-white">🤖 AI-анализ</h3>
+              <button
+                onClick={handleEvaluate}
+                disabled={evaluating}
+                className="btn-primary text-sm !py-2 !px-4 disabled:opacity-50"
+              >
+                {evaluating ? "Анализируем..." : aiEvaluations.length > 0 ? "Переоценить" : "Оценить через AI"}
+              </button>
+            </div>
+
+            {aiEvaluations.length === 0 && !evaluating && (
+              <p className="text-sm" style={{ color: "#5a6a8a" }}>
+                Нажмите «Оценить через AI» для получения автоматической оценки заявки
+              </p>
+            )}
+
+            {aiEvaluations.length > 0 && (() => {
+              const ev = aiEvaluations[currentEvalIdx];
+              if (!ev) return null;
+
+              const verdictCfg: Record<string, { emoji: string; text: string; color: string }> = {
+                support: { emoji: "🟢", text: "Поддержать", color: "#4ade80" },
+                develop: { emoji: "🟡", text: "Развить", color: "#f59e0b" },
+                rethink: { emoji: "🔴", text: "Переосмыслить", color: "#ef4444" },
+              };
+              const vc = verdictCfg[ev.verdict] || verdictCfg.develop;
+
+              const aiLevelCfg: Record<string, { text: string; color: string }> = {
+                beginner: { text: "Начинающий", color: "#f59e0b" },
+                growing: { text: "Растущий", color: "#3b82f6" },
+                advanced: { text: "Продвинутый", color: "#10b981" },
+              };
+              const alc = aiLevelCfg[ev.authorAiLevel] || aiLevelCfg.growing;
+
+              const parseJ = (s: string) => { try { return JSON.parse(s); } catch { return []; } };
+
+              return (
+                <>
+                  {/* History selector */}
+                  {aiEvaluations.length > 1 && (
+                    <div className="flex gap-2 flex-wrap">
+                      {aiEvaluations.map((e, i) => (
+                        <button
+                          key={e.id}
+                          onClick={() => setCurrentEvalIdx(i)}
+                          className="text-xs px-2 py-1 rounded"
+                          style={{
+                            background: i === currentEvalIdx ? "rgba(99,130,255,0.2)" : "rgba(99,130,255,0.07)",
+                            color: i === currentEvalIdx ? "#6382ff" : "#5a6a8a",
+                            border: `1px solid ${i === currentEvalIdx ? "#6382ff" : "rgba(99,130,255,0.15)"}`,
+                          }}
+                        >
+                          {new Date(e.createdAt).toLocaleDateString("ru-RU")}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* Verdict */}
+                  <div className="p-3 rounded-xl" style={{ background: `${vc.color}15` }}>
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <span>{vc.emoji}</span>
+                        <span className="font-bold" style={{ color: vc.color }}>{vc.text}</span>
+                      </div>
+                      <span className="text-2xl font-bold text-white">{Math.round(ev.totalScore)}</span>
+                    </div>
+                    <p className="text-sm mt-1" style={{ color: "#8898b8" }}>{ev.oneLiner}</p>
+                  </div>
+
+                  {/* Author profile */}
+                  <div>
+                    <div className="text-xs font-medium mb-2" style={{ color: "#6382ff" }}>👤 Профиль автора</div>
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className="text-xs" style={{ color: "#8898b8" }}>AI-уровень:</span>
+                      <span className="text-xs px-2 py-0.5 rounded-full" style={{ background: `${alc.color}20`, color: alc.color }}>{alc.text}</span>
+                    </div>
+                    <p className="text-xs" style={{ color: "#8898b8" }}>
+                      <strong>Качества:</strong> {parseJ(ev.authorQualities).join(", ")}
+                    </p>
+                    <p className="text-xs mt-1" style={{ color: "#8898b8" }}>
+                      <strong>Зона роста:</strong> {ev.authorGrowthZone}
+                    </p>
+                  </div>
+
+                  {/* For business experts */}
+                  <div className="p-3 rounded-xl" style={{ background: "rgba(99,130,255,0.05)" }}>
+                    <div className="text-xs font-medium mb-2" style={{ color: "#f59e0b" }}>👔 Для Оксаны и Шиканова</div>
+                    <div className="space-y-1 text-xs" style={{ color: "#8898b8" }}>
+                      <p><strong>Проблема:</strong> {ev.problemSimple}</p>
+                      <p><strong>Решение:</strong> {ev.solutionSimple}</p>
+                      <p><strong>Эффект:</strong> {ev.businessEffect}</p>
+                    </div>
+                  </div>
+
+                  {/* Hidden potential */}
+                  <div>
+                    <div className="text-xs font-medium mb-1" style={{ color: "#a78bfa" }}>💎 Скрытый потенциал</div>
+                    <p className="text-xs" style={{ color: "#8898b8" }}>{ev.hiddenPotential}</p>
+                    <p className="text-xs mt-1" style={{ color: "#8898b8" }}><strong>Может вырасти в:</strong> {ev.growthPath}</p>
+                  </div>
+
+                  {/* Support */}
+                  <div>
+                    <div className="text-xs font-medium mb-1" style={{ color: "#4ade80" }}>🤝 Как поддержать</div>
+                    <div className="text-xs space-y-0.5" style={{ color: "#8898b8" }}>
+                      <p><strong>Менторинг:</strong> {ev.mentorshipNeeded}</p>
+                      <p><strong>Ментор:</strong> {ev.suggestedMentor}</p>
+                      <p><strong>Ресурсы:</strong> {parseJ(ev.resourcesToAllocate).join(", ")}</p>
+                    </div>
+                  </div>
+
+                  {/* Action buttons */}
+                  <div className="flex gap-2 pt-2 border-t" style={{ borderColor: "rgba(99,130,255,0.15)" }}>
+                    <button
+                      onClick={handleNotifyCommission}
+                      disabled={notifyingCommission}
+                      className="btn-primary flex-1 text-sm !py-2 disabled:opacity-50"
+                    >
+                      {notifyingCommission ? "Отправка..." : "📧 Комиссии"}
+                    </button>
+                    <button
+                      onClick={handleNotifyAuthor}
+                      disabled={notifyingAuthor}
+                      className="btn-secondary flex-1 text-sm !py-2 disabled:opacity-50"
+                    >
+                      {notifyingAuthor ? "Отправка..." : "💬 Автору"}
+                    </button>
+                  </div>
+                </>
+              );
+            })()}
           </div>
         </div>
       </div>

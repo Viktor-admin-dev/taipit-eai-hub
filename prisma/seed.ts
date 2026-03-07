@@ -118,6 +118,22 @@ async function main() {
   });
   console.log(`Created moderator user: ${moderator.email}`);
 
+  // Seed commission members (upsert — safe to re-run)
+  const commissionMembers = [
+    { name: "Виктор Ярутов", email: "yarutov@taipit.ru", role: "ai_expert", profile: "ai_advanced" },
+    { name: "Разгуляев", email: "razgulyaev@taipit.ru", role: "ai_expert", profile: "ai_advanced" },
+    { name: "Оксана", email: "ceo@taipit.ru", role: "ceo", profile: "business_focused" },
+    { name: "Александр Шиканов", email: "shikanov@taipit.ru", role: "business_expert", profile: "business_focused" },
+  ];
+  for (const member of commissionMembers) {
+    await prisma.commissionMember.upsert({
+      where: { email: member.email },
+      update: member,
+      create: member,
+    });
+  }
+  console.log(`Created/updated ${commissionMembers.length} commission members`);
+
   // No sample forum topics — real topics are created by users
 
   console.log("Seeding complete!");
