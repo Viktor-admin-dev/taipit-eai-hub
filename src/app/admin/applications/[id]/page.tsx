@@ -276,6 +276,7 @@ export default function ApplicationDetailPage() {
   const stat = statusLabels[application.status];
 
   return (
+    <>
     <div className="space-y-6">
       {/* Breadcrumbs */}
       <nav style={{ color: "#5a6a8a" }}>
@@ -761,5 +762,6 @@ export default function ApplicationDetailPage() {
         </div>
       </div>
     )}
+    </>
   );
 }
