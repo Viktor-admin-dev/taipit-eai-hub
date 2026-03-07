@@ -316,12 +316,12 @@ export default function MyApplicationPage() {
                         <div key={key}>
                           <div className="flex justify-between text-sm mb-1">
                             <span style={{ color: "#8898b8" }}>{scoreLabelsMap[key]}</span>
-                            <span className="text-white font-medium">{val}/20</span>
+                            <span className="text-white font-medium">{val}/100</span>
                           </div>
-                          <div className="h-2 rounded-full" style={{ background: "rgba(99,130,255,0.15)" }}>
+                          <div className="h-2 rounded-full overflow-hidden" style={{ background: "rgba(99,130,255,0.15)" }}>
                             <div className="h-full rounded-full transition-all" style={{
-                              width: `${(val / 20) * 100}%`,
-                              background: val >= 14 ? "#4ade80" : val >= 10 ? "#f59e0b" : "#ef4444"
+                              width: `${Math.min(val, 100)}%`,
+                              background: val >= 70 ? "#4ade80" : val >= 50 ? "#f59e0b" : "#ef4444"
                             }} />
                           </div>
                         </div>
