@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 
-type Step = "find" | "list" | "edit" | "preview" | "done";
+type Step = "find" | "list" | "results" | "edit" | "preview" | "done";
 
 interface Application {
   id: number;
@@ -19,6 +19,22 @@ interface Application {
   createdAt: string;
   division: { name: string };
   teamMembers: Array<{ name: string; position: string | null; divisionName: string | null }>;
+}
+
+interface MyEvaluation {
+  scores: {
+    business: number | null;
+    innovation: number | null;
+    feasibility: number | null;
+    scalability: number | null;
+    quality: number | null;
+    total: number | null;
+  };
+  authorStrengths: string[];
+  developmentSteps: string[];
+  resourcesForStart: string[];
+  questionsToThink: string[];
+  evaluatedAt: string | null;
 }
 
 interface PreviewResult {
@@ -54,18 +70,14 @@ const fieldLabelsMap: Record<string, string> = {
   expectedEffect: "Ожидаемый эффект",
 };
 
-const verdictLabels: Record<string, { text: string; color: string }> = {
-  support: { text: "🟢 Готово к отправке", color: "#4ade80" },
-  develop: { text: "🟡 Можно улучшить", color: "#f59e0b" },
-  rethink: { text: "🔴 Требует доработки", color: "#ef4444" },
-};
-
 export default function MyApplicationPage() {
   const [step, setStep] = useState<Step>("find");
   const [email, setEmail] = useState("");
   const [searching, setSearching] = useState(false);
   const [applications, setApplications] = useState<Application[]>([]);
   const [selected, setSelected] = useState<Application | null>(null);
+  const [myEval, setMyEval] = useState<MyEvaluation | null>(null);
+  const [loadingEval, setLoadingEval] = useState(false);
   const [formData, setFormData] = useState({
     title: "",
     descriptionProblem: "",
@@ -96,7 +108,7 @@ export default function MyApplicationPage() {
     }
   };
 
-  const handleSelect = (app: Application) => {
+  const handleSelect = async (app: Application) => {
     setSelected(app);
     setFormData({
       title: app.title,
@@ -105,7 +117,18 @@ export default function MyApplicationPage() {
       expectedEffect: app.expectedEffect,
       resourcesNeeded: app.resourcesNeeded || "",
     });
-    setStep("edit");
+    setMyEval(null);
+    setStep("results");
+    setLoadingEval(true);
+    try {
+      const res = await fetch(`/api/applications/my-evaluation?id=${app.id}&email=${encodeURIComponent(email)}`);
+      const data = await res.json();
+      if (res.ok) setMyEval(data);
+    } catch {
+      // Evaluation not available yet
+    } finally {
+      setLoadingEval(false);
+    }
   };
 
   const handlePreview = async () => {
@@ -165,9 +188,9 @@ export default function MyApplicationPage() {
         {step === "find" && (
           <div className="max-w-md mx-auto">
             <div className="text-center mb-8">
-              <h1 className="text-3xl font-bold text-white mb-4">Редактировать заявку</h1>
+              <h1 className="text-3xl font-bold text-white mb-4">Моя заявка</h1>
               <p style={{ color: "#8898b8" }}>
-                Введите ваш корпоративный email, чтобы найти свою заявку
+                Введите ваш корпоративный email, чтобы посмотреть оценку и улучшить заявку
               </p>
             </div>
             <form onSubmit={handleFind} className="card space-y-4">
@@ -221,7 +244,7 @@ export default function MyApplicationPage() {
             ) : (
               <div className="space-y-4">
                 <p className="text-sm" style={{ color: "#5a6a8a" }}>
-                  Нашли {applications.length} заявк{applications.length === 1 ? "у" : "и"}. Выберите для редактирования:
+                  Нашли {applications.length} заявк{applications.length === 1 ? "у" : "и"}. Выберите для просмотра:
                 </p>
                 {applications.map((app) => {
                   const st = statusLabels[app.status] || statusLabels.submitted;
@@ -245,7 +268,7 @@ export default function MyApplicationPage() {
                           onClick={() => handleSelect(app)}
                           className="btn-primary text-sm !py-2 !px-4 flex-shrink-0"
                         >
-                          Редактировать
+                          Смотреть →
                         </button>
                       </div>
                     </div>
@@ -256,11 +279,148 @@ export default function MyApplicationPage() {
           </div>
         )}
 
+        {/* Step: Results — AI evaluation for author */}
+        {step === "results" && selected && (
+          <div className="space-y-6">
+            <div className="flex items-center gap-4">
+              <button onClick={() => setStep("list")} className="btn-secondary text-sm">← Назад</button>
+              <div>
+                <h2 className="text-2xl font-bold text-white">Оценка заявки #{selected.id}</h2>
+                <p className="text-sm mt-1" style={{ color: "#8898b8" }}>{selected.title}</p>
+              </div>
+            </div>
+
+            {loadingEval ? (
+              <div className="card flex items-center justify-center py-12">
+                <div className="text-center">
+                  <div className="animate-spin w-8 h-8 border-4 border-[#6382ff] border-t-transparent rounded-full mx-auto mb-3" />
+                  <p style={{ color: "#8898b8" }}>Загружаем оценку...</p>
+                </div>
+              </div>
+            ) : myEval && myEval.scores.total !== null ? (
+              <>
+                {/* Score bars */}
+                <div className="card">
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-lg font-semibold text-white">Баллы вашей заявки</h3>
+                    <span className="text-3xl font-bold" style={{
+                      color: (myEval.scores.total || 0) >= 70 ? "#4ade80" : (myEval.scores.total || 0) >= 50 ? "#f59e0b" : "#ef4444"
+                    }}>
+                      {Math.round(myEval.scores.total || 0)}/100
+                    </span>
+                  </div>
+                  <div className="space-y-3">
+                    {(["business", "innovation", "feasibility", "scalability", "quality"] as const).map((key) => {
+                      const val = myEval.scores[key] ?? 0;
+                      return (
+                        <div key={key}>
+                          <div className="flex justify-between text-sm mb-1">
+                            <span style={{ color: "#8898b8" }}>{scoreLabelsMap[key]}</span>
+                            <span className="text-white font-medium">{val}/20</span>
+                          </div>
+                          <div className="h-2 rounded-full" style={{ background: "rgba(99,130,255,0.15)" }}>
+                            <div className="h-full rounded-full transition-all" style={{
+                              width: `${(val / 20) * 100}%`,
+                              background: val >= 14 ? "#4ade80" : val >= 10 ? "#f59e0b" : "#ef4444"
+                            }} />
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                  {myEval.evaluatedAt && (
+                    <p className="text-xs mt-4" style={{ color: "#5a6a8a" }}>
+                      Оценено: {new Date(myEval.evaluatedAt).toLocaleString("ru-RU")}
+                    </p>
+                  )}
+                </div>
+
+                {/* Author strengths */}
+                {myEval.authorStrengths.length > 0 && (
+                  <div className="card" style={{ borderLeft: "4px solid #4ade80" }}>
+                    <h3 className="text-lg font-semibold text-white mb-3">✅ Сильные стороны</h3>
+                    <ul className="space-y-2">
+                      {myEval.authorStrengths.map((s, i) => (
+                        <li key={i} className="flex items-start gap-2 text-sm" style={{ color: "#8898b8" }}>
+                          <span style={{ color: "#4ade80" }}>•</span> {s}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+
+                {/* Development steps */}
+                {myEval.developmentSteps.length > 0 && (
+                  <div className="card" style={{ borderLeft: "4px solid #f59e0b" }}>
+                    <h3 className="text-lg font-semibold text-white mb-3">🛤 Шаги для развития идеи</h3>
+                    <ol className="space-y-2">
+                      {myEval.developmentSteps.map((s, i) => (
+                        <li key={i} className="flex items-start gap-3 text-sm" style={{ color: "#8898b8" }}>
+                          <span className="w-5 h-5 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0 mt-0.5"
+                            style={{ background: "rgba(245,158,11,0.2)", color: "#f59e0b" }}>
+                            {i + 1}
+                          </span>
+                          {s}
+                        </li>
+                      ))}
+                    </ol>
+                  </div>
+                )}
+
+                {/* Resources */}
+                {myEval.resourcesForStart.length > 0 && (
+                  <div className="card" style={{ borderLeft: "4px solid #6382ff" }}>
+                    <h3 className="text-lg font-semibold text-white mb-3">🧰 Что нужно для старта</h3>
+                    <ul className="space-y-2">
+                      {myEval.resourcesForStart.map((s, i) => (
+                        <li key={i} className="flex items-start gap-2 text-sm" style={{ color: "#8898b8" }}>
+                          <span style={{ color: "#6382ff" }}>→</span> {s}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+
+                {/* Questions to think about */}
+                {myEval.questionsToThink.length > 0 && (
+                  <div className="card" style={{ borderLeft: "4px solid #a78bfa" }}>
+                    <h3 className="text-lg font-semibold text-white mb-3">🤔 Вопросы для проработки</h3>
+                    <ul className="space-y-2">
+                      {myEval.questionsToThink.map((s, i) => (
+                        <li key={i} className="flex items-start gap-2 text-sm" style={{ color: "#8898b8" }}>
+                          <span style={{ color: "#a78bfa" }}>?</span> {s}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+              </>
+            ) : (
+              <div className="card text-center py-8">
+                <div className="text-4xl mb-3">⏳</div>
+                <p className="text-white font-medium mb-2">Оценка ещё обрабатывается</p>
+                <p className="text-sm" style={{ color: "#8898b8" }}>
+                  AI анализирует вашу заявку. Вернитесь через несколько минут или улучшите описание.
+                </p>
+              </div>
+            )}
+
+            <div className="flex gap-4 justify-center">
+              <button
+                onClick={() => setStep("edit")}
+                className="btn-primary !px-8 !py-3"
+              >
+                ✏️ Улучшить заявку
+              </button>
+            </div>
+          </div>
+        )}
+
         {/* Step: Edit */}
         {step === "edit" && selected && (
           <div>
             <div className="flex items-center gap-4 mb-6">
-              <button onClick={() => setStep("list")} className="btn-secondary text-sm">← Назад</button>
+              <button onClick={() => setStep("results")} className="btn-secondary text-sm">← К оценке</button>
               <div>
                 <h2 className="text-2xl font-bold text-white">Редактирование заявки #{selected.id}</h2>
                 <p className="text-sm mt-1" style={{ color: "#8898b8" }}>
@@ -372,13 +532,13 @@ export default function MyApplicationPage() {
 
             {/* Scores */}
             {(() => {
-              const vl = verdictLabels[preview.verdict] || verdictLabels.develop;
+              const total = preview.scores.total;
               return (
-                <div className="card" style={{ borderLeft: `4px solid ${vl.color}` }}>
+                <div className="card">
                   <div className="flex items-center justify-between mb-4">
-                    <span className="text-lg font-semibold" style={{ color: vl.color }}>{vl.text}</span>
-                    <span className="text-3xl font-bold" style={{ color: preview.scores.total >= 70 ? "#4ade80" : preview.scores.total >= 50 ? "#f59e0b" : "#ef4444" }}>
-                      {Math.round(preview.scores.total)}/100
+                    <h3 className="text-lg font-semibold text-white">Результат анализа</h3>
+                    <span className="text-3xl font-bold" style={{ color: total >= 70 ? "#4ade80" : total >= 50 ? "#f59e0b" : "#ef4444" }}>
+                      {Math.round(total)}/100
                     </span>
                   </div>
                   <p className="text-sm mb-4" style={{ color: "#8898b8" }}>{preview.message}</p>
@@ -478,13 +638,13 @@ export default function MyApplicationPage() {
             </div>
             <h2 className="text-2xl font-bold text-white mb-4">Заявка обновлена!</h2>
             <p className="mb-2" style={{ color: "#8898b8" }}>
-              Изменения сохранены. AI-оценка обновляется в фоне — комиссия увидит актуальную версию.
+              Изменения сохранены. AI-оценка обновляется в фоне.
             </p>
             <p className="mb-8 text-sm" style={{ color: "#5a6a8a" }}>
-              Спасибо за участие в EAI Challenge!
+              Через несколько минут вернитесь сюда чтобы увидеть новые баллы.
             </p>
             <div className="flex gap-3 justify-center">
-              <button onClick={() => { setStep("find"); setEmail(""); setApplications([]); setSelected(null); setPreview(null); }} className="btn-secondary">
+              <button onClick={() => { setStep("find"); setEmail(""); setApplications([]); setSelected(null); setPreview(null); setMyEval(null); }} className="btn-secondary">
                 Найти другую заявку
               </button>
               <Link href="/" className="btn-primary">На главную</Link>
