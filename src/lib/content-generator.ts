@@ -36,8 +36,8 @@ export async function generateAndSaveContent(applicationId: number): Promise<{
   const evaluation = application.aiEvaluations[0];
   const totalApplications = await prisma.application.count();
 
-  // Calculate days left (contest ends March 31, 2026)
-  const contestEnd = new Date("2026-03-31");
+  // Calculate days left (contest ends April 30, 2026)
+  const contestEnd = new Date("2026-04-30");
   const daysLeft = Math.max(
     0,
     Math.ceil((contestEnd.getTime() - Date.now()) / (1000 * 60 * 60 * 24))

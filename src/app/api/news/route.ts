@@ -22,7 +22,7 @@ export async function GET() {
     prisma.application.groupBy({ by: ["applicantEmail"] }).then((r) => r.length),
   ]);
 
-  const contestEnd = new Date("2026-03-31");
+  const contestEnd = new Date("2026-04-30");
   const daysLeft = Math.max(
     0,
     Math.ceil((contestEnd.getTime() - Date.now()) / (1000 * 60 * 60 * 24))
