@@ -1,23 +1,15 @@
-name: Deploy to Production
+name: Deploy
 
 on:
   push:
-    branches:
-      - main
+    branches: [main]
 
 jobs:
-  deploy:
-    runs-on: ubuntu-latest
-
+  deploy-internal:
+    runs-on: self-hosted
     steps:
-      - name: Deploy via SSH
-        uses: appleboy/ssh-action@v1.0.3
-        with:
-          host: ${{ secrets.SSH_HOST }}
-          username: ${{ secrets.SSH_USER }}
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
-          script: |
-            cd /root/taipit-eai-hub
-            git pull origin main
-            docker compose down
-            docker compose up -d --build
+      - name: Pull and Rebuild on eai.taipit.ru
+        run: |
+          cd /opt/eai/taipit-eai-hub
+          git pull origin main
+          docker compose up -d --build
