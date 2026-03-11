@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import Anthropic from "@anthropic-ai/sdk";
 import { buildPreviewPrompt } from "@/lib/evaluation-prompt";
+import { buildFileContentBlocks } from "@/lib/file-content";
 
 const anthropic = new Anthropic({
   apiKey: process.env.ANTHROPIC_API_KEY,
@@ -25,11 +26,15 @@ export async function POST(request: NextRequest) {
 
   try {
     const prompt = buildPreviewPrompt(draft);
+    const fileBlocks = await buildFileContentBlocks(draft.filesUrls || null);
+    const userContent = fileBlocks.length > 0
+      ? [{ type: "text" as const, text: prompt }, ...fileBlocks]
+      : prompt;
 
     const message = await anthropic.messages.create({
       model: "claude-haiku-4-5-20251001",
       max_tokens: 8000,
-      messages: [{ role: "user", content: prompt }],
+      messages: [{ role: "user", content: userContent }],
     });
 
     const text = message.content[0].type === "text" ? message.content[0].text : "";

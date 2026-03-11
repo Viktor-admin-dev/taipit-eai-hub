@@ -20,11 +20,17 @@ export async function PATCH(request: NextRequest) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const { id, isPublished } = await request.json();
+  const { id, isPublished, title, body, cta } = await request.json();
+
+  const data: Record<string, unknown> = {};
+  if (isPublished !== undefined) data.isPublished = isPublished;
+  if (title !== undefined) data.title = title;
+  if (body !== undefined) data.body = body;
+  if (cta !== undefined) data.cta = cta;
 
   const post = await prisma.newsPost.update({
     where: { id },
-    data: { isPublished },
+    data,
   });
 
   return NextResponse.json(post);

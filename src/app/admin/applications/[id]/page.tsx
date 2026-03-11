@@ -406,6 +406,37 @@ export default function ApplicationDetailPage() {
                   <p style={{ color: "#8898b8" }}>{application.resourcesNeeded}</p>
                 </div>
               )}
+              {application.filesUrls && (() => {
+                let files: string[] = [];
+                try { files = JSON.parse(application.filesUrls); } catch { /* */ }
+                if (files.length === 0) return null;
+                return (
+                  <div>
+                    <div className="text-sm font-medium mb-2" style={{ color: "#f472b6" }}>
+                      Приложенные файлы
+                    </div>
+                    <div className="flex flex-wrap gap-3">
+                      {files.map((filename: string, i: number) => {
+                        const ext = filename.split(".").pop()?.toLowerCase();
+                        const isImage = ["png", "jpg", "jpeg"].includes(ext || "");
+                        return (
+                          <a
+                            key={i}
+                            href={`/api/uploads/${filename}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-all hover:opacity-80"
+                            style={{ background: "rgba(99,130,255,0.08)", border: "1px solid rgba(99,130,255,0.15)", color: "#8898b8" }}
+                          >
+                            <span>{isImage ? "🖼️" : "📄"}</span>
+                            <span className="truncate max-w-[200px]">{filename.replace(/^\d+_/, "")}</span>
+                          </a>
+                        );
+                      })}
+                    </div>
+                  </div>
+                );
+              })()}
             </div>
           </div>
 

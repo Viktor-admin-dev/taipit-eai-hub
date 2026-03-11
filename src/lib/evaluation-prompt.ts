@@ -10,6 +10,7 @@ interface ApplicationForPrompt {
   descriptionSolution: string;
   expectedEffect: string;
   resourcesNeeded: string | null;
+  filesUrls?: string | null;
   division: { name: string };
   teamMembers: Array<{ name: string }>;
 }
@@ -65,6 +66,8 @@ ${application.descriptionSolution}
 ${application.expectedEffect}
 
 ${application.resourcesNeeded ? `### Необходимые ресурсы:\n${application.resourcesNeeded}` : ""}
+
+${application.filesUrls ? "### Вложения\nК заявке приложены файлы (презентация/скриншоты). Они прикреплены ниже — учти их содержимое при оценке." : ""}
 
 ---
 
@@ -175,6 +178,7 @@ interface DraftForPreview {
   descriptionProblem?: string;
   descriptionSolution?: string;
   expectedEffect?: string;
+  filesUrls?: string;
 }
 
 export function buildPreviewPrompt(draft: DraftForPreview): string {
@@ -196,6 +200,8 @@ ${draft.descriptionSolution || "(не заполнено)"}
 
 Ожидаемый эффект:
 ${draft.expectedEffect || "(не заполнено)"}
+
+${draft.filesUrls ? "К черновику приложены файлы (презентация/скриншоты). Они прикреплены ниже — учти их содержимое при анализе." : ""}
 
 ---
 

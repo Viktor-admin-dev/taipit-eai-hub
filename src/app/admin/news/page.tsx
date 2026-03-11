@@ -107,6 +107,13 @@ export default function AdminNewsPage() {
                   )}
                 </div>
                 <div className="flex flex-col gap-2 flex-shrink-0">
+                  <Link
+                    href={`/admin/news/${post.id}`}
+                    className="text-sm px-3 py-1.5 rounded-lg text-center whitespace-nowrap"
+                    style={{ background: "rgba(99,130,255,0.1)", color: "#6382ff" }}
+                  >
+                    Редактировать
+                  </Link>
                   <button
                     onClick={() => handleToggle(post)}
                     className="text-sm px-3 py-1.5 rounded-lg whitespace-nowrap"

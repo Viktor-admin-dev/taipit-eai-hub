@@ -88,6 +88,10 @@ export default function ApplicationForm() {
     otherResources: "",
   });
 
+  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
+  const [uploadedFiles, setUploadedFiles] = useState<string[]>([]);
+  const [isUploading, setIsUploading] = useState(false);
+
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [submittedId, setSubmittedId] = useState<number | null>(null);
@@ -123,19 +127,59 @@ export default function ApplicationForm() {
     rethink: { text: "🔴 Требует доработки", color: "#ef4444" },
   };
 
-  const getPayload = () => ({
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    const allowed = files.filter(
+      (f) => ["application/pdf", "image/png", "image/jpeg"].includes(f.type) && f.size <= 10 * 1024 * 1024
+    );
+    setSelectedFiles((prev) => [...prev, ...allowed].slice(0, 3));
+    e.target.value = "";
+  };
+
+  const removeFile = (index: number) => {
+    setSelectedFiles((prev) => prev.filter((_, i) => i !== index));
+    setUploadedFiles([]);
+  };
+
+  const uploadFiles = async (): Promise<string[]> => {
+    if (selectedFiles.length === 0) return uploadedFiles;
+    if (uploadedFiles.length > 0) return uploadedFiles;
+
+    setIsUploading(true);
+    try {
+      const fd = new FormData();
+      selectedFiles.forEach((f) => fd.append("files", f));
+      const res = await fetch("/api/upload", { method: "POST", body: fd });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error);
+      setUploadedFiles(data.files);
+      return data.files as string[];
+    } catch (err) {
+      alert(err instanceof Error ? err.message : "Ошибка загрузки файлов");
+      return [];
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
+  const getPayload = (filesUrls?: string[]) => ({
     ...formData,
     resourcesNeeded: JSON.stringify([...formData.resourcesNeeded, formData.otherResources].filter(Boolean)),
     teamMembers: formData.format === "team" ? formData.teamMembers : [],
+    filesUrls: filesUrls && filesUrls.length > 0 ? JSON.stringify(filesUrls) : undefined,
   });
 
   const handlePreview = async () => {
     setIsAnalyzing(true);
     try {
+      const files = await uploadFiles();
       const res = await fetch("/api/applications/preview", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData),
+        body: JSON.stringify({
+          ...formData,
+          filesUrls: files.length > 0 ? JSON.stringify(files) : undefined,
+        }),
       });
       const data = await res.json();
       if (res.ok) {
@@ -156,10 +200,11 @@ export default function ApplicationForm() {
     setIsSubmitting(true);
 
     try {
+      const files = await uploadFiles();
       const response = await fetch("/api/applications", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(getPayload()),
+        body: JSON.stringify(getPayload(files)),
       });
 
       const data = await response.json();
@@ -380,6 +425,8 @@ export default function ApplicationForm() {
               resourcesNeeded: [],
               otherResources: "",
             });
+            setSelectedFiles([]);
+            setUploadedFiles([]);
           }}
           className="btn-primary"
         >
@@ -667,6 +714,87 @@ export default function ApplicationForm() {
             />
           </div>
         </div>
+      </div>
+
+      {/* File Upload */}
+      <div className="card">
+        <h3 className="text-xl font-semibold text-white mb-4">Презентация (необязательно)</h3>
+        <p className="text-sm mb-4" style={{ color: "#8898b8" }}>
+          Прикрепите презентацию или скриншоты (PDF, PNG, JPG). До 3 файлов, каждый до 10 МБ.
+        </p>
+        <div
+          className="rounded-xl p-6 text-center cursor-pointer transition-all"
+          style={{
+            border: "2px dashed rgba(99, 130, 255, 0.25)",
+            background: "rgba(99, 130, 255, 0.03)",
+          }}
+          onClick={() => document.getElementById("file-input")?.click()}
+          onDragOver={(e) => { e.preventDefault(); e.currentTarget.style.borderColor = "#6382ff"; }}
+          onDragLeave={(e) => { e.currentTarget.style.borderColor = "rgba(99, 130, 255, 0.25)"; }}
+          onDrop={(e) => {
+            e.preventDefault();
+            e.currentTarget.style.borderColor = "rgba(99, 130, 255, 0.25)";
+            const files = Array.from(e.dataTransfer.files).filter(
+              (f) => ["application/pdf", "image/png", "image/jpeg"].includes(f.type) && f.size <= 10 * 1024 * 1024
+            );
+            setSelectedFiles((prev) => [...prev, ...files].slice(0, 3));
+            setUploadedFiles([]);
+          }}
+        >
+          <input
+            id="file-input"
+            type="file"
+            multiple
+            accept=".pdf,.png,.jpg,.jpeg"
+            onChange={handleFileSelect}
+            className="hidden"
+          />
+          <div className="text-2xl mb-2">📎</div>
+          <div className="text-sm text-white">Нажмите или перетащите файлы сюда</div>
+          <div className="text-xs mt-1" style={{ color: "#5a6a8a" }}>PDF, PNG, JPG</div>
+        </div>
+        {selectedFiles.length > 0 && (
+          <div className="mt-4 space-y-2">
+            {selectedFiles.map((file, index) => (
+              <div
+                key={index}
+                className="flex items-center justify-between p-3 rounded-lg"
+                style={{ background: "rgba(99, 130, 255, 0.06)", border: "1px solid rgba(99, 130, 255, 0.12)" }}
+              >
+                <div className="flex items-center gap-3 min-w-0">
+                  <span className="text-lg flex-shrink-0">
+                    {file.type === "application/pdf" ? "📄" : "🖼️"}
+                  </span>
+                  <div className="min-w-0">
+                    <div className="text-sm text-white truncate">{file.name}</div>
+                    <div className="text-xs" style={{ color: "#5a6a8a" }}>
+                      {(file.size / 1024 / 1024).toFixed(1)} МБ
+                    </div>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => removeFile(index)}
+                  className="p-1.5 rounded-lg transition-all flex-shrink-0"
+                  style={{ background: "rgba(239, 68, 68, 0.1)", color: "#ef4444" }}
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
+        {isUploading && (
+          <div className="mt-3 flex items-center gap-2 text-sm" style={{ color: "#6382ff" }}>
+            <svg className="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
+              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+            </svg>
+            Загружаем файлы...
+          </div>
+        )}
       </div>
 
       {/* Resources */}

@@ -4,6 +4,7 @@ import prisma from "@/lib/prisma";
 import { buildEvaluationPrompt } from "@/lib/evaluation-prompt";
 import { sendToTelegramGroup } from "@/lib/telegram";
 import { generateAndSaveContent } from "@/lib/content-generator";
+import { buildFileContentBlocks } from "@/lib/file-content";
 
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
@@ -18,10 +19,14 @@ async function runPostSubmitFlow(applicationId: number) {
     if (!application) return;
 
     const prompt = buildEvaluationPrompt(application);
+    const fileBlocks = await buildFileContentBlocks(application.filesUrls);
+    const userContent = fileBlocks.length > 0
+      ? [{ type: "text" as const, text: prompt }, ...fileBlocks]
+      : prompt;
     const message = await anthropic.messages.create({
       model: "claude-sonnet-4-20250514",
       max_tokens: 2500,
-      messages: [{ role: "user", content: prompt }],
+      messages: [{ role: "user", content: userContent }],
     });
 
     const text = message.content[0].type === "text" ? message.content[0].text : "";
@@ -151,6 +156,7 @@ export async function POST(request: NextRequest) {
       descriptionSolution,
       expectedEffect,
       resourcesNeeded,
+      filesUrls,
     } = body;
 
     // Validate required fields
@@ -183,6 +189,7 @@ export async function POST(request: NextRequest) {
         descriptionSolution,
         expectedEffect,
         resourcesNeeded: resourcesNeeded || null,
+        filesUrls: filesUrls || null,
         teamMembers: format === "team" && teamMembers?.length > 0
           ? {
               create: teamMembers.map((member: { name: string; position?: string; divisionName?: string }) => ({

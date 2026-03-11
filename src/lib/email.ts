@@ -355,3 +355,48 @@ export function buildCommissionEmail(
 </body>
 </html>`;
 }
+
+interface NewsEmailData {
+  title: string;
+  body: string;
+  cta: string | null;
+}
+
+export function buildNewsEmailHtml(news: NewsEmailData): string {
+  const paragraphs = news.body
+    .split("\n")
+    .filter((p) => p.trim())
+    .map((p) => `<p>${p}</p>`)
+    .join("");
+
+  return `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <style>
+    body { font-family: Arial, sans-serif; color: #333; max-width: 600px; margin: 0 auto; line-height: 1.6; }
+    .header { background: linear-gradient(135deg, #6382ff, #4ade80); color: white; padding: 30px; border-radius: 12px 12px 0 0; text-align: center; }
+    .content { padding: 25px; background: #f8f9fa; }
+    .section { background: white; padding: 20px; margin: 15px 0; border-radius: 12px; }
+    .cta-btn { display: inline-block; background: #6382ff; color: white; padding: 14px 28px; border-radius: 8px; text-decoration: none; font-weight: bold; margin-top: 10px; }
+    .footer { padding: 20px; text-align: center; color: #666; font-size: 13px; }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>${news.title}</h1>
+    <p>EAI Challenge • Новости конкурса</p>
+  </div>
+  <div class="content">
+    <div class="section">
+      ${paragraphs}
+      ${news.cta ? `<div style="text-align: center; margin-top: 20px;"><a href="https://taipit.starec.ai/contest" class="cta-btn">${news.cta}</a></div>` : ""}
+    </div>
+  </div>
+  <div class="footer">
+    <p>С верой в ваш потенциал,<br>Команда EAI Challenge</p>
+    <p>Холдинг Тайпит • <a href="https://taipit.starec.ai">taipit.starec.ai</a></p>
+  </div>
+</body>
+</html>`;
+}

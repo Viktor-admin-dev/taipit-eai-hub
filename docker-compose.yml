@@ -11,6 +11,8 @@ services:
       - NODE_ENV=production
     volumes:
       - db_data:/app/prisma
+      - uploads_data:/app/uploads
 
 volumes:
   db_data:
+  uploads_data:
