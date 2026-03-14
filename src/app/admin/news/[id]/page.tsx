@@ -102,7 +102,7 @@ export default function NewsEditorPage() {
       const res = await fetch("/api/admin/news/refine", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ title, body, cta, prompt: refinePrompt }),
+        body: JSON.stringify({ title, body, cta, prompt: refinePrompt, postId: parseInt(params.id as string) }),
       });
       const data = await res.json();
       if (res.ok) {

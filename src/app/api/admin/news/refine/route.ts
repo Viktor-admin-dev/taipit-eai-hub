@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import Anthropic from "@anthropic-ai/sdk";
+import prisma from "@/lib/prisma";
 import { verifyAdminToken } from "@/lib/auth";
 
 const anthropic = new Anthropic({
@@ -15,10 +16,40 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "AI-сервис недоступен" }, { status: 503 });
   }
 
-  const { title, body, cta, prompt: userPrompt } = await request.json();
+  const { title, body, cta, prompt: userPrompt, postId } = await request.json();
 
   if (!userPrompt) {
     return NextResponse.json({ error: "Укажите промт для доработки" }, { status: 400 });
+  }
+
+  // Fetch application data if post is linked to one
+  let applicationContext = "";
+  if (postId) {
+    const post = await prisma.newsPost.findUnique({
+      where: { id: postId },
+    });
+    if (post?.applicationId) {
+      const app = await prisma.application.findUnique({
+        where: { id: post.applicationId },
+        include: { division: true, aiEvaluations: { take: 1, orderBy: { createdAt: "desc" } } },
+      });
+      if (app) {
+        const eval_ = app.aiEvaluations[0];
+        applicationContext = `
+
+## ДАННЫЕ ЗАЯВКИ (используй при необходимости)
+- Автор: ${app.applicantName}
+- Дивизион: ${app.division.name}
+- Название идеи: ${app.title}
+- Проблема: ${app.descriptionProblem}
+- Решение: ${app.descriptionSolution}
+- Ожидаемый эффект: ${app.expectedEffect}
+${eval_ ? `- AI-оценка: ${eval_.totalScore}/100, вердикт: ${eval_.verdict}
+- Суть простыми словами: ${eval_.problemSimple}
+- Решение простыми словами: ${eval_.solutionSimple}
+- Бизнес-эффект: ${eval_.businessEffect}` : ""}`;
+      }
+    }
   }
 
   try {
@@ -34,6 +65,7 @@ export async function POST(request: NextRequest) {
 - Заголовок: ${title || "(пусто)"}
 - Текст: ${body || "(пусто)"}
 - Кнопка (CTA): ${cta || "(пусто)"}
+${applicationContext}
 
 Запрос модератора: ${userPrompt}
 
@@ -46,8 +78,8 @@ export async function POST(request: NextRequest) {
 }
 
 ВАЖНО:
-- Сохраняй общий стиль и тональность
-- Не добавляй ничего лишнего
+- Выполни запрос модератора максимально точно
+- Сохраняй тёплый мотивирующий стиль
 - Верни ТОЛЬКО JSON`,
         },
       ],
